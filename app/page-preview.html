@@ -1,7 +1,12 @@
-export default function HomePage() {
-  return (
-    <>
-      <style>{`
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instituto Virtual de IA · Mejoramiento Profesional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --midnight:#060A12;
@@ -257,8 +262,9 @@ footer{background:#030608;border-top:1px solid rgba(200,151,58,.08);padding:3.5r
   .chain-grid{grid-template-columns:1fr}
   .chain-code{display:none}
 }
-`}</style>
-      <div dangerouslySetInnerHTML={{__html: `
+</style>
+</head>
+<body>
 
 <!-- NAV -->
 <nav>
@@ -718,8 +724,8 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   const COLORS = {agritech:'#1DB887',iot_mecanica:'#82AAFF',administracion_finanzas:'#C8973A',negocios_mercadeo:'#C778DD',ingenieria_software_ia:'#C3E88D',sostenibilidad:'#1DB887',micro_emprendimiento:'#F78C6C',salud_bienestar:'#82AAFF',educacion_familiar:'#E8C27A'};
   const NIVEL = {basico:'Básico',intermedio:'Intermedio',avanzado:'Avanzado',experto:'Grado Completo'};
   try {
-    const res = await fetch(\`\${SUPABASE_URL}/rest/v1/programas_academicos?select=id,codigo,titulo,vertical,nivel,creditos,proyecto_final,habilidad_clave&eq.activo=true&order=creditos.desc&limit=6\`, {
-      headers: { apikey: ANON, Authorization: \`Bearer \${ANON}\`, 'Accept-Profile': 'instituto_virtual' }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/programas_academicos?select=id,codigo,titulo,vertical,nivel,creditos,proyecto_final,habilidad_clave&eq.activo=true&order=creditos.desc&limit=6`, {
+      headers: { apikey: ANON, Authorization: `Bearer ${ANON}`, 'Accept-Profile': 'instituto_virtual' }
     });
     if (!res.ok) throw new Error('fetch failed');
     const data = await res.json();
@@ -729,20 +735,20 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
       const color = COLORS[p.vertical] || '#C8973A';
       const icon = ICONS[p.vertical] || '📚';
       const nivel = NIVEL[p.nivel] || p.nivel;
-      return \`<a href="/programas/\${p.codigo}" class="prog-card reveal" style="--prog-color:\${color}22;--prog-accent:\${color}">
+      return `<a href="/programas/${p.codigo}" class="prog-card reveal" style="--prog-color:${color}22;--prog-accent:${color}">
         <div class="prog-header">
-          <span class="prog-icon">\${icon}</span>
-          <div class="prog-level">\${nivel}</div>
-          <div class="prog-title">\${p.titulo}</div>
+          <span class="prog-icon">${icon}</span>
+          <div class="prog-level">${nivel}</div>
+          <div class="prog-title">${p.titulo}</div>
         </div>
         <div class="prog-body">
-          <p class="prog-desc">\${p.proyecto_final || p.habilidad_clave || ''}</p>
+          <p class="prog-desc">${p.proyecto_final || p.habilidad_clave || ''}</p>
           <div class="prog-footer">
-            <div class="prog-credits"><span class="prog-credits-num">\${p.creditos}</span><span class="prog-credits-label">créditos</span></div>
-            <span class="prog-badge">\${p.vertical.replace(/_/g,' ')}</span>
+            <div class="prog-credits"><span class="prog-credits-num">${p.creditos}</span><span class="prog-credits-label">créditos</span></div>
+            <span class="prog-badge">${p.vertical.replace(/_/g,' ')}</span>
           </div>
         </div>
-      </a>\`;
+      </a>`;
     }).join('');
     grid.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   } catch(e) {
@@ -756,20 +762,20 @@ document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
       {icon:'💻',nivel:'Avanzado',titulo:'Ingeniería de Software con IA',desc:'Plataforma SaaS completa con agentes IA',cr:25,v:'ingenieria_software_ia',color:'#C3E88D',codigo:'SOFT-001'},
       {icon:'🩺',nivel:'Grado Completo',titulo:'Ciencias de la Salud y Telemedicina',desc:'Clínica de telesalud independiente operativa',cr:84,v:'salud_bienestar',color:'#82AAFF',codigo:'CIEN-SALUD-001'},
     ];
-    grid.innerHTML = fallback.map(p => \`<a href="/programas/\${p.codigo}" class="prog-card reveal" style="--prog-color:\${p.color}22;--prog-accent:\${p.color}">
+    grid.innerHTML = fallback.map(p => `<a href="/programas/${p.codigo}" class="prog-card reveal" style="--prog-color:${p.color}22;--prog-accent:${p.color}">
       <div class="prog-header">
-        <span class="prog-icon">\${p.icon}</span>
-        <div class="prog-level">\${p.nivel}</div>
-        <div class="prog-title">\${p.titulo}</div>
+        <span class="prog-icon">${p.icon}</span>
+        <div class="prog-level">${p.nivel}</div>
+        <div class="prog-title">${p.titulo}</div>
       </div>
       <div class="prog-body">
-        <p class="prog-desc">\${p.desc}</p>
+        <p class="prog-desc">${p.desc}</p>
         <div class="prog-footer">
-          <div class="prog-credits"><span class="prog-credits-num">\${p.cr}</span><span class="prog-credits-label">créditos</span></div>
-          <span class="prog-badge">\${p.v.replace(/_/g,' ')}</span>
+          <div class="prog-credits"><span class="prog-credits-num">${p.cr}</span><span class="prog-credits-label">créditos</span></div>
+          <span class="prog-badge">${p.v.replace(/_/g,' ')}</span>
         </div>
       </div>
-    </a>\`).join('');
+    </a>`).join('');
     grid.querySelectorAll('.reveal').forEach(el => observer.observe(el));
   }
 })();
@@ -817,11 +823,11 @@ async function sendChat() {
 function appendMsg(role, text, agentName) {
   const msgs = document.getElementById('chat-msgs');
   const div = document.createElement('div');
-  div.className = \`chat-msg \${role}\`;
+  div.className = `chat-msg ${role}`;
   if (role === 'assistant') {
-    div.innerHTML = \`<div class="chat-msg-avatar">A</div><div>\${agentName ? \`<div class="chat-agent-name">\${agentName}</div>\` : ''}<div class="chat-msg-bubble">\${text}</div></div>\`;
+    div.innerHTML = `<div class="chat-msg-avatar">A</div><div>${agentName ? `<div class="chat-agent-name">${agentName}</div>` : ''}<div class="chat-msg-bubble">${text}</div></div>`;
   } else {
-    div.innerHTML = \`<div class="chat-msg-bubble">\${text}</div>\`;
+    div.innerHTML = `<div class="chat-msg-bubble">${text}</div>`;
   }
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
@@ -830,7 +836,7 @@ function appendMsg(role, text, agentName) {
 function appendTyping() {
   const msgs = document.getElementById('chat-msgs');
   const id = 'typing-' + Date.now();
-  msgs.insertAdjacentHTML('beforeend', \`<div class="chat-msg" id="\${id}"><div class="chat-msg-avatar">A</div><div class="chat-typing"><span></span><span></span><span></span></div></div>\`);
+  msgs.insertAdjacentHTML('beforeend', `<div class="chat-msg" id="${id}"><div class="chat-msg-avatar">A</div><div class="chat-typing"><span></span><span></span><span></span></div></div>`);
   msgs.scrollTop = msgs.scrollHeight;
   return id;
 }
@@ -865,7 +871,5 @@ async function submitForm() {
   btn.onclick = () => window.open('https://t.me/iainstituto_bot', '_blank');
 }
 </script>
-`}} />
-    </>
-  )
-}
+</body>
+</html>
