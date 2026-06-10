@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root{--ink:#0d1117;--paper:#f7f4ef;--gold:#c8973a;--gold-lt:#e8c27a;--verde:#2d6a4f;--verde-lt:#52b788;--cielo:#1a3a5c;--mist:#e8e4de}
+html{scroll-behavior:smooth}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+.pulse-dot{animation:pulse-dot 2s infinite}

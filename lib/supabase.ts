@@ -1,0 +1,8 @@
+import { createClient } from '@supabase/supabase-js'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export type Programa = { id:string;codigo:string;titulo:string;titulo_en:string|null;descripcion:string|null;vertical:string;nivel:string;creditos:number;duracion_semanas:number;proyecto_final:string|null;habilidad_clave:string|null;precio_usd:number;perfil_objetivo:string[];activo:boolean }
+export const VERTICAL_COLORS: Record<string,{bg:string;text:string}> = {agritech:{bg:'bg-emerald-900',text:'text-emerald-100'},iot_mecanica:{bg:'bg-blue-900',text:'text-blue-100'},administracion_finanzas:{bg:'bg-amber-900',text:'text-amber-100'},negocios_mercadeo:{bg:'bg-rose-900',text:'text-rose-100'},ingenieria_software_ia:{bg:'bg-purple-900',text:'text-purple-100'},sostenibilidad:{bg:'bg-green-900',text:'text-green-100'},micro_emprendimiento:{bg:'bg-orange-900',text:'text-orange-100'},salud_bienestar:{bg:'bg-teal-900',text:'text-teal-100'},educacion_familiar:{bg:'bg-indigo-900',text:'text-indigo-100'}}
+export const VERTICAL_ICONS: Record<string,string> = {agritech:'🌱',iot_mecanica:'⚙️',administracion_finanzas:'💼',negocios_mercadeo:'📱',ingenieria_software_ia:'💻',sostenibilidad:'🌿',micro_emprendimiento:'🏠',salud_bienestar:'🩺',educacion_familiar:'📚'}
+export const NIVEL_LABEL: Record<string,string> = {basico:'Básico',intermedio:'Intermedio',avanzado:'Avanzado',experto:'Grado Completo'}
