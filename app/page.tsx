@@ -1,871 +1,705 @@
-export default function HomePage() {
-  return (
-    <>
-      <style>{`
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --midnight:#060A12;
-  --navy:#0C1525;
-  --navy-lt:#121E35;
-  --gold:#C8973A;
-  --gold-lt:#E8C27A;
-  --gold-dim:#C8973A33;
-  --emerald:#1DB887;
-  --emerald-dim:#1DB88722;
-  --ink:#F0EDE8;
-  --ink-60:rgba(240,237,232,.6);
-  --ink-30:rgba(240,237,232,.3);
-  --ink-10:rgba(240,237,232,.08);
-  --mist:#1E2A3D;
-  --serif:'DM Serif Display',Georgia,serif;
-  --sans:'DM Sans',system-ui,sans-serif;
-  --mono:'JetBrains Mono',monospace;
-  --r12:12px;--r20:20px;--r32:32px;
+"use client";
+import { useState, useEffect, useRef } from "react";
+
+// ── DATOS ──────────────────────────────────────────────────────────────────
+const FACULTADES = [
+  { codigo:"FAC-ING", nombre:"Ingeniería y Sistemas", emoji:"⚙️", color:"#3B82F6", bg:"rgba(59,130,246,.10)", num:8 },
+  { codigo:"FAC-ENE", nombre:"Energía y Petróleo", emoji:"🔥", color:"#EF4444", bg:"rgba(239,68,68,.10)", num:6 },
+  { codigo:"FAC-AMB", nombre:"Agua, Ambiente y Clima", emoji:"🌊", color:"#14B8A6", bg:"rgba(20,184,166,.10)", num:6 },
+  { codigo:"FAC-AGRO", nombre:"Ciencias Agronómicas", emoji:"🌾", color:"#22C55E", bg:"rgba(34,197,94,.10)", num:6 },
+  { codigo:"FAC-SAL", nombre:"Ciencias de la Salud", emoji:"🩺", color:"#EC4899", bg:"rgba(236,72,153,.10)", num:3 },
+  { codigo:"FAC-ADM", nombre:"Administración y Negocios", emoji:"💼", color:"#F59E0B", bg:"rgba(245,158,11,.10)", num:5 },
+  { codigo:"FAC-DER", nombre:"Derecho y Legal Tech", emoji:"⚖️", color:"#8B5CF6", bg:"rgba(139,92,246,.10)", num:2 },
+  { codigo:"FAC-HUM", nombre:"Humanidades y Educación", emoji:"📚", color:"#10B981", bg:"rgba(16,185,129,.10)", num:2 },
+  { codigo:"FAC-TEC", nombre:"Programas Técnicos", emoji:"🏠", color:"#6B7280", bg:"rgba(107,114,128,.10)", num:2 },
+];
+
+const NIVELES = [
+  { id:"tecnico", label:"Técnico", cr:"8–20 cr", desc:"Sin requisitos previos" },
+  { id:"basico", label:"Básico", cr:"8–15 cr", desc:"Ideal para comenzar" },
+  { id:"avanzado", label:"Avanzado", cr:"20–30 cr", desc:"Profundización práctica" },
+  { id:"experto", label:"Grado Completo", cr:"84 cr", desc:"Estándar MIT/Wageningen" },
+  { id:"diplomado", label:"Diplomado", cr:"30 cr", desc:"Especialización ejecutiva" },
+  { id:"posgrado", label:"Maestría / MSc", cr:"60 ECTS", desc:"Defensa ante Tribunal IA" },
+];
+
+const STATS = [
+  { num:"9", label:"Facultades" },
+  { num:"36", label:"Programas" },
+  { num:"17", label:"Agentes IA" },
+  { num:"102", label:"Materias" },
+  { num:"24/7", label:"Disponible" },
+  { num:"$0", label:"Para empezar" },
+];
+
+const PILARES = [
+  { icon:"🎯", titulo:"Misión", texto:"Democratizar el acceso al conocimiento profesional de clase mundial para emprendedores, agricultores, técnicos y familias de América Latina mediante inteligencia artificial." },
+  { icon:"🔭", titulo:"Visión", texto:"Ser la plataforma de mejoramiento profesional más rigurosa y accesible del hemisferio, donde cada egresado funde una empresa propia con estándares internacionales." },
+  { icon:"💡", titulo:"Propósito", texto:"Que el conocimiento no sea privilegio de unos pocos. Que cada persona, sin importar su origen, pueda actualizar sus fortalezas y competir en el mercado global." },
+  { icon:"⚖️", titulo:"Principios", texto:"Doctrina Social: subsidiariedad, dignidad humana y bien común. Excelencia sin arrogancia. Ciencia con conciencia. La IA amplifica a la persona — nunca la reemplaza." },
+];
+
+const SIMULADORES = [
+  { area:"Ingeniería", tool:"FreeCAD + OpenFOAM", desc:"Diseña piezas mecánicas en 3D y simula flujos de fluidos. El mismo software que usan ingenieros de SpaceX y Airbus.", color:"#3B82F6" },
+  { area:"Agronomía", tool:"DSSAT + QGIS", desc:"Simula el rendimiento de tu cultivo antes de sembrar. Modela el impacto del cambio climático en tu finca.", color:"#22C55E" },
+  { area:"Agua y Ambiente", tool:"EPANET + SWAT+", desc:"Diseña redes de agua potable para 500 familias. Modela cuencas hidrográficas completas con datos reales.", color:"#14B8A6" },
+  { area:"Energía", tool:"DWSIM + PyPSA", desc:"Simula procesos petroquímicos completos. Diseña micro-redes de energía renovable para comunidades rurales.", color:"#EF4444" },
+  { area:"Salud", tool:"OpenMRS + 3D Slicer", desc:"Gestiona una clínica de telesalud desde el primer día. Visualiza imágenes médicas en 3D con IA diagnóstica.", color:"#EC4899" },
+  { area:"Software IA", tool:"Claude API + Supabase", desc:"Construye tu propio SaaS con agentes IA integrados. Del diseño al deploy en producción — en semanas.", color:"#8B5CF6" },
+];
+
+const VALORACION_TEXTS = [
+  { q:"¿Solo se aprende en pantalla?", a:"Los simuladores y proyectos capstone son con herramientas reales: FreeCAD, DSSAT, EPANET, Claude API. Aprendes haciendo, no memorizando." },
+  { q:"¿El certificado vale en el mercado?", a:"El certificado se registra en blockchain (Polygon L2, estándar MIT Blockcerts). Cualquier empresa puede verificarlo en segundos con un QR. No es un título universitario — es una credencial de competencias verificables." },
+  { q:"¿Qué diferencia a los agentes IA?", a:"No son chatbots genéricos. Cada agente tiene personalidad, metodología propia y recuerda tu historia. Don Ernesto usa analogías del campo. El Tribunal evalúa con escenarios de crisis reales, sin opción múltiple." },
+  { q:"¿Con quién me comparo internacionalmente?", a:"Los pensum están construidos sobre los currículos de MIT, Wageningen, Harvard Medical, ETH Zurich y Yale Law. Cada programa cita su referente internacional." },
+];
+
+// ── COMPONENTE HÉROE CON CANVAS DE NEURONAS ─────────────────────────────────
+function NeuralCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext("2d")!;
+    let W = c.offsetWidth, H = c.offsetHeight;
+    c.width = W; c.height = H;
+    const N = 55;
+    const nodes = Array.from({length:N}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      vx: (Math.random()-.5)*.4, vy: (Math.random()-.5)*.4,
+      r: 1.5 + Math.random()*2.5,
+      pulse: Math.random()*Math.PI*2,
+    }));
+    let frame = 0;
+    const MAX_D = 130;
+    const loop = () => {
+      frame++;
+      ctx.clearRect(0,0,W,H);
+      nodes.forEach(n => {
+        n.x += n.vx; n.y += n.vy; n.pulse += .015;
+        if (n.x<0||n.x>W) n.vx*=-1;
+        if (n.y<0||n.y>H) n.vy*=-1;
+      });
+      for (let i=0; i<N; i++) for (let j=i+1; j<N; j++) {
+        const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if (d<MAX_D) {
+          const a = (1-d/MAX_D)*.35;
+          ctx.strokeStyle=`rgba(200,151,58,${a})`;
+          ctx.lineWidth=.6;
+          ctx.beginPath(); ctx.moveTo(nodes[i].x,nodes[i].y);
+          ctx.lineTo(nodes[j].x,nodes[j].y); ctx.stroke();
+        }
+      }
+      nodes.forEach(n => {
+        const glow = Math.sin(n.pulse)*.3+.5;
+        const g = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*4);
+        g.addColorStop(0,`rgba(200,151,58,${glow*.8})`);
+        g.addColorStop(1,"rgba(200,151,58,0)");
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(n.x,n.y,n.r*4,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=`rgba(240,237,232,${.4+glow*.4})`;
+        ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2); ctx.fill();
+      });
+      requestAnimationFrame(loop);
+    };
+    const id = requestAnimationFrame(loop);
+    const onResize = () => { W=c.offsetWidth; H=c.offsetHeight; c.width=W; c.height=H; };
+    window.addEventListener("resize",onResize);
+    return () => { cancelAnimationFrame(id); window.removeEventListener("resize",onResize); };
+  }, []);
+  return <canvas ref={ref} style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:.55}} />;
 }
-html{scroll-behavior:smooth}
-body{background:var(--midnight);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-a{text-decoration:none;color:inherit}
-img{max-width:100%}
 
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1.5rem,5vw,4rem);background:rgba(6,10,18,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(200,151,58,.12)}
-.nav-brand{display:flex;align-items:center;gap:.875rem}
-.nav-gem{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#C8973A 0%,#1DB887 100%);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.15rem;font-weight:400;color:var(--midnight)}
-.nav-name{font-family:var(--serif);color:var(--ink);font-size:.95rem;line-height:1.25}
-.nav-tag{font-family:var(--mono);color:var(--gold);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
-.nav-links{display:flex;gap:2.5rem;list-style:none}
-.nav-links a{font-size:.85rem;font-weight:500;color:var(--ink-60);letter-spacing:.01em;transition:color .2s}
-.nav-links a:hover{color:var(--gold)}
-.nav-cta{background:var(--gold);color:var(--midnight);font-family:var(--sans);font-weight:600;font-size:.82rem;padding:.55rem 1.35rem;border-radius:8px;transition:opacity .18s,transform .15s;letter-spacing:.01em}
-.nav-cta:hover{opacity:.88;transform:translateY(-1px)}
+// ── NAVEGADOR JERÁRQUICO ─────────────────────────────────────────────────────
+function NavegadorJerarquico() {
+  const [area, setArea] = useState<string|null>(null);
+  const [programa, setPrograma] = useState<string|null>(null);
+  const [materia, setMateria] = useState<string|null>(null);
+  const [programas, setProgramas] = useState<any[]>([]);
+  const [fases, setFases] = useState<any[]>([]);
+  const [materias, setMaterias] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-/* HERO */
-.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:calc(68px + 4rem) clamp(1.5rem,5vw,4rem) 4rem;position:relative;overflow:hidden}
-.hero-noise{position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");opacity:.4;pointer-events:none}
-.hero-gradient{position:absolute;top:-20%;right:-10%;width:700px;height:700px;background:radial-gradient(ellipse,rgba(200,151,58,.07) 0%,transparent 65%);pointer-events:none}
-.hero-gradient2{position:absolute;bottom:-10%;left:-5%;width:500px;height:500px;background:radial-gradient(ellipse,rgba(29,184,135,.05) 0%,transparent 65%);pointer-events:none}
-.hero-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;position:relative;z-index:2}
-.hero-eyebrow{display:flex;align-items:center;gap:.75rem;margin-bottom:1.75rem}
-.hero-eyebrow-dot{width:6px;height:6px;background:var(--emerald);border-radius:50%;animation:pulse 2.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.5)}}
-.hero-eyebrow-text{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;color:var(--emerald);text-transform:uppercase}
-.hero-h1{font-family:var(--serif);font-size:clamp(2.6rem,4.5vw,4rem);line-height:1.08;letter-spacing:-.015em;color:var(--ink);margin-bottom:1.5rem}
-.hero-h1 em{font-style:italic;color:var(--gold)}
-.hero-h1 .line-accent{color:var(--emerald)}
-.hero-sub{font-size:1.1rem;color:var(--ink-60);max-width:480px;line-height:1.75;margin-bottom:2.5rem}
-.hero-quote{background:linear-gradient(135deg,rgba(200,151,58,.06),rgba(200,151,58,.02));border:1px solid rgba(200,151,58,.15);border-radius:var(--r12);padding:1.25rem 1.5rem;margin-bottom:2.5rem;max-width:480px}
-.hero-quote-text{font-family:var(--serif);font-style:italic;font-size:.97rem;color:rgba(240,237,232,.78);line-height:1.65}
-#gandhi-typed::after{content:'|';animation:blink .7s infinite;color:var(--gold);font-style:normal}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-.hero-quote-cite{font-family:var(--mono);font-size:.62rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-top:.6rem;display:block}
-.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:3rem}
-.btn-primary{background:var(--gold);color:var(--midnight);font-weight:600;font-size:.9rem;padding:.85rem 2rem;border-radius:var(--r12);display:inline-flex;align-items:center;gap:.5rem;transition:all .2s;box-shadow:0 0 0 0 rgba(200,151,58,.4)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(200,151,58,.25)}
-.btn-primary svg{transition:transform .2s}
-.btn-primary:hover svg{transform:translateX(3px)}
-.btn-ghost{border:1.5px solid rgba(240,237,232,.15);color:var(--ink-60);font-weight:500;font-size:.9rem;padding:.85rem 2rem;border-radius:var(--r12);display:inline-flex;align-items:center;gap:.5rem;transition:all .2s}
-.btn-ghost:hover{border-color:rgba(200,151,58,.4);color:var(--ink);background:rgba(200,151,58,.05)}
-.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(240,237,232,.06);border-radius:var(--r12);overflow:hidden;border:1px solid rgba(240,237,232,.06)}
-.stat{background:var(--midnight);padding:1.25rem 1rem;text-align:center}
-.stat-num{font-family:var(--serif);font-size:1.9rem;color:var(--gold);line-height:1;display:block}
-.stat-label{font-family:var(--mono);font-size:.62rem;color:var(--ink-30);letter-spacing:.08em;text-transform:uppercase;margin-top:.4rem;display:block}
-.hero-right{display:flex;flex-direction:column;gap:1rem}
-.hero-card{background:var(--navy);border:1px solid var(--mist);border-radius:var(--r20);padding:1.5rem;transition:border-color .2s,transform .25s}
-.hero-card:hover{border-color:rgba(200,151,58,.25);transform:translateX(4px)}
-.hero-card-icon{font-size:1.5rem;margin-bottom:.75rem}
-.hero-card-title{font-family:var(--serif);font-size:1.05rem;color:var(--ink);margin-bottom:.35rem}
-.hero-card-desc{font-size:.82rem;color:var(--ink-60);line-height:1.6}
-.hero-card-badge{display:inline-block;background:var(--emerald-dim);color:var(--emerald);font-family:var(--mono);font-size:.62rem;letter-spacing:.07em;padding:.2rem .6rem;border-radius:6px;margin-top:.6rem;border:1px solid rgba(29,184,135,.2)}
+  const SUPA = "https://jmkkfmthysrvfkmkjtxf.supabase.co";
+  const KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impta2tmbXRoeXNydmZrbWtqdHhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNzE0NDYsImV4cCI6MjA5NTk0NzQ0Nn0.jQ6cPI8yiHjB2fyEn7TzlIi_bco_H_dObVnX9gCEGEM";
+  const hdr  = { apikey: KEY, Authorization:`Bearer ${KEY}` };
 
-/* SECTIONS GENERIC */
-section{padding:clamp(4rem,8vw,7rem) clamp(1.5rem,5vw,4rem)}
-.section-inner{max-width:1200px;margin:0 auto}
-.label{font-family:var(--mono);font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem}
-.label::before{content:'';width:20px;height:1px;background:var(--gold)}
-h2.title{font-family:var(--serif);font-size:clamp(2rem,3.5vw,2.9rem);line-height:1.12;letter-spacing:-.01em;color:var(--ink);margin-bottom:1rem}
-h2.title em{font-style:italic;color:var(--gold)}
-.lead{font-size:1.05rem;color:var(--ink-60);max-width:580px;line-height:1.75;margin-bottom:3rem}
-
-/* FILOSOFÍA */
-.philo-section{background:linear-gradient(160deg,var(--navy) 0%,#0A1628 100%);border-top:1px solid var(--mist);border-bottom:1px solid var(--mist)}
-.philo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--mist)}
-.philo-item{background:var(--navy);padding:2.5rem 2rem;text-align:center}
-.philo-glyph{font-size:1.75rem;margin-bottom:1rem;display:block}
-.philo-title{font-family:var(--serif);font-size:1.1rem;color:var(--ink);margin-bottom:.5rem}
-.philo-text{font-size:.85rem;color:var(--ink-60);line-height:1.7;max-width:260px;margin:0 auto}
-
-/* HOW IT WORKS */
-.how-section{background:var(--midnight)}
-.how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:3rem}
-.how-step{padding:1.75rem;background:var(--navy);border-radius:var(--r20);border:1px solid var(--mist);position:relative;overflow:hidden;transition:border-color .25s}
-.how-step:hover{border-color:rgba(200,151,58,.25)}
-.how-step::before{content:attr(data-n);position:absolute;top:-1rem;right:1rem;font-family:var(--serif);font-size:5rem;font-weight:400;color:rgba(200,151,58,.06);line-height:1;pointer-events:none;user-select:none}
-.how-step-icon{font-size:1.5rem;margin-bottom:1rem;display:block}
-.how-step-title{font-family:var(--serif);font-size:1rem;color:var(--ink);margin-bottom:.4rem}
-.how-step-desc{font-size:.82rem;color:var(--ink-60);line-height:1.65}
-.how-connector{display:none}
-
-/* PROGRAMAS */
-.programas-section{background:var(--navy)}
-.programas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
-.prog-card{background:var(--midnight);border:1px solid var(--mist);border-radius:var(--r20);overflow:hidden;transition:all .25s;cursor:pointer;display:block;color:inherit}
-.prog-card:hover{border-color:rgba(200,151,58,.3);transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.4)}
-.prog-header{padding:1.75rem 1.75rem 1.25rem;position:relative;overflow:hidden}
-.prog-header::after{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;background:var(--prog-color,rgba(200,151,58,.08));transform:translate(30%,-30%);filter:blur(20px)}
-.prog-icon{font-size:1.75rem;margin-bottom:.75rem;display:block}
-.prog-level{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--prog-accent,var(--gold));margin-bottom:.35rem}
-.prog-title{font-family:var(--serif);font-size:1.05rem;color:var(--ink);line-height:1.35}
-.prog-body{padding:1.25rem 1.75rem 1.75rem;border-top:1px solid var(--mist)}
-.prog-desc{font-size:.82rem;color:var(--ink-60);line-height:1.6;margin-bottom:1rem;min-height:2.8rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.prog-footer{display:flex;align-items:center;justify-content:space-between}
-.prog-credits{display:flex;align-items:baseline;gap:.3rem}
-.prog-credits-num{font-family:var(--serif);font-size:1.6rem;color:var(--gold)}
-.prog-credits-label{font-size:.72rem;color:var(--ink-30)}
-.prog-badge{font-family:var(--mono);font-size:.62rem;padding:.25rem .6rem;border-radius:6px;background:var(--ink-10);color:var(--ink-60);letter-spacing:.05em}
-.ver-todos{display:inline-flex;align-items:center;gap:.5rem;color:var(--gold);font-weight:500;font-size:.9rem;margin-top:2rem;transition:gap .2s}
-.ver-todos:hover{gap:.875rem}
-.ver-todos svg{transition:transform .2s}
-.ver-todos:hover svg{transform:translateX(3px)}
-
-/* DSI QUOTE */
-.dsi-section{background:var(--midnight);text-align:center;padding:5rem clamp(1.5rem,5vw,4rem)}
-.dsi-inner{max-width:720px;margin:0 auto}
-.dsi-cross{font-size:2rem;margin-bottom:2rem;opacity:.6;display:block}
-.dsi-quote{font-family:var(--serif);font-style:italic;font-size:clamp(1.2rem,2.5vw,1.75rem);line-height:1.55;color:rgba(240,237,232,.82);margin-bottom:1.25rem}
-.dsi-cite{font-family:var(--mono);font-size:.65rem;color:var(--gold);letter-spacing:.12em;text-transform:uppercase}
-.dsi-sub{font-size:.85rem;color:var(--ink-30);margin-top:1.25rem;max-width:540px;margin-left:auto;margin-right:auto}
-
-/* AGENTES */
-.agentes-section{background:var(--navy)}
-.agentes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
-.agente-card{background:var(--midnight);border:1px solid var(--mist);border-radius:var(--r20);padding:1.5rem;position:relative;overflow:hidden;transition:all .25s}
-.agente-card::before{content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;border-radius:50%;background:var(--ag-color,rgba(200,151,58,.08));filter:blur(25px);pointer-events:none}
-.agente-card:hover{border-color:rgba(var(--ag-rgb,200,151,58),.3);transform:translateY(-3px)}
-.agente-avatar{width:44px;height:44px;border-radius:12px;background:var(--ag-bg,rgba(200,151,58,.08));border:1px solid var(--ag-border,rgba(200,151,58,.2));display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.15rem;font-weight:400;color:var(--ag-text,var(--gold));margin-bottom:1rem}
-.agente-name{font-family:var(--serif);font-size:.95rem;color:var(--ink);margin-bottom:.2rem}
-.agente-role{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ag-text,var(--gold));margin-bottom:.6rem;opacity:.8}
-.agente-desc{font-size:.78rem;color:var(--ink-60);line-height:1.6}
-
-/* BLOCKCHAIN */
-.chain-section{background:var(--midnight)}
-.chain-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start}
-.chain-steps{list-style:none;margin-top:2rem}
-.chain-step{display:flex;gap:1.25rem;padding:1.5rem 0;border-bottom:1px solid var(--mist)}
-.chain-step:last-child{border-bottom:none}
-.chain-step-n{font-family:var(--serif);font-size:2rem;color:rgba(200,151,58,.2);line-height:1;min-width:2.5rem}
-.chain-step-title{font-family:var(--serif);font-size:1rem;color:var(--ink);margin-bottom:.3rem}
-.chain-step-desc{font-size:.83rem;color:var(--ink-60);line-height:1.65}
-.chain-code{background:var(--navy);border:1px solid var(--mist);border-radius:var(--r20);padding:2rem;font-family:var(--mono);font-size:.78rem;line-height:2;overflow-x:auto;position:sticky;top:100px}
-.chain-code .cm{color:rgba(240,237,232,.25)}
-.chain-code .kw{color:#C792EA}
-.chain-code .nm{color:#82AAFF}
-.chain-code .st{color:#C3E88D}
-.chain-code .vl{color:#F78C6C}
-.chain-code .ok{color:var(--emerald)}
-
-/* CTA REGISTRO */
-.cta-section{background:linear-gradient(160deg,#0C1A2E 0%,#0A1628 40%,#061018 100%);border-top:1px solid var(--mist)}
-.cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start}
-.cta-perks{list-style:none;margin-top:1.5rem}
-.cta-perk{display:flex;align-items:flex-start;gap:1rem;padding:.875rem 0;border-bottom:1px solid rgba(240,237,232,.04)}
-.cta-perk:last-child{border-bottom:none}
-.cta-perk-icon{width:38px;height:38px;border-radius:10px;background:rgba(200,151,58,.08);border:1px solid rgba(200,151,58,.12);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;margin-top:.1rem}
-.cta-perk-title{font-weight:600;font-size:.9rem;color:var(--ink);margin-bottom:.1rem}
-.cta-perk-desc{font-size:.8rem;color:var(--ink-60)}
-.cta-form{background:rgba(240,237,232,.03);border:1px solid rgba(240,237,232,.08);border-radius:var(--r32);padding:2.5rem}
-.cta-form h3{font-family:var(--serif);font-size:1.35rem;color:var(--ink);margin-bottom:1.75rem}
-.form-row{margin-bottom:1.25rem}
-.form-row label{display:block;font-size:.78rem;font-weight:500;color:var(--ink-60);margin-bottom:.45rem;letter-spacing:.02em}
-.form-row input,.form-row select{width:100%;background:rgba(240,237,232,.05);border:1px solid rgba(240,237,232,.1);border-radius:10px;padding:.75rem 1rem;color:var(--ink);font-family:var(--sans);font-size:.9rem;transition:border-color .2s,background .2s;-webkit-appearance:none}
-.form-row input::placeholder{color:rgba(240,237,232,.25)}
-.form-row input:focus,.form-row select:focus{outline:none;border-color:rgba(200,151,58,.4);background:rgba(200,151,58,.04)}
-.form-row select option{background:var(--navy);color:var(--ink)}
-.form-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.form-submit{width:100%;padding:1rem;background:var(--gold);border:none;border-radius:12px;cursor:pointer;font-family:var(--sans);font-weight:600;font-size:1rem;color:var(--midnight);transition:opacity .2s,transform .15s;margin-top:.5rem}
-.form-submit:hover{opacity:.9;transform:translateY(-1px)}
-.form-note{font-family:var(--mono);font-size:.65rem;color:var(--ink-30);text-align:center;margin-top:.875rem;letter-spacing:.04em}
-
-/* FOOTER */
-footer{background:#030608;border-top:1px solid rgba(200,151,58,.08);padding:3.5rem clamp(1.5rem,5vw,4rem) 2rem}
-.footer-inner{max-width:1200px;margin:0 auto}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4rem;margin-bottom:3rem}
-.footer-brand-name{font-family:var(--serif);font-size:1.05rem;color:var(--ink);margin:1rem 0 .5rem}
-.footer-brand-desc{font-size:.82rem;color:var(--ink-30);line-height:1.7;max-width:280px}
-.footer-motto{font-family:var(--serif);font-style:italic;color:rgba(200,151,58,.5);font-size:.82rem;margin-top:.875rem}
-.footer-col-title{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
-.footer-col a{display:block;font-size:.83rem;color:var(--ink-30);margin-bottom:.625rem;transition:color .18s}
-.footer-col a:hover{color:var(--ink)}
-.footer-bottom{border-top:1px solid rgba(240,237,232,.05);padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center}
-.footer-copy{font-size:.75rem;color:var(--ink-30)}
-.footer-tg{font-family:var(--mono);font-size:.72rem;color:var(--emerald);letter-spacing:.05em}
-
-/* CHAT WIDGET */
-.chat-fab{position:fixed;bottom:1.75rem;right:1.75rem;z-index:200;width:56px;height:56px;border-radius:16px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(200,151,58,.35);transition:all .2s}
-.chat-fab:hover{transform:scale(1.06);box-shadow:0 12px 40px rgba(200,151,58,.45)}
-.chat-fab-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--emerald);border-radius:50%;font-size:.6rem;font-weight:700;color:var(--midnight);display:flex;align-items:center;justify-content:center;font-family:var(--mono)}
-.chat-panel{position:fixed;bottom:calc(56px + 2.5rem);right:1.75rem;z-index:200;width:360px;background:var(--navy);border:1px solid var(--mist);border-radius:var(--r20);overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,.6);display:none;flex-direction:column;max-height:72vh}
-.chat-panel.open{display:flex}
-.chat-panel-head{background:linear-gradient(135deg,#0D2A1C,#0C1A2E);padding:1.1rem 1.25rem;display:flex;align-items:center;gap:.875rem;border-bottom:1px solid var(--mist)}
-.chat-head-avatar{width:36px;height:36px;border-radius:10px;background:rgba(29,184,135,.12);border:1px solid rgba(29,184,135,.2);display:flex;align-items:center;justify-content:center;font-family:var(--serif);color:var(--emerald);font-size:.95rem}
-.chat-head-name{font-weight:600;font-size:.9rem;color:var(--ink)}
-.chat-head-status{font-size:.72rem;color:var(--emerald);display:flex;align-items:center;gap:.35rem}
-.chat-head-status::before{content:'';width:6px;height:6px;background:var(--emerald);border-radius:50%;display:inline-block;animation:pulse 2s infinite}
-.chat-msgs{flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:.875rem}
-.chat-msg{display:flex;gap:.6rem;align-items:flex-start}
-.chat-msg.user{flex-direction:row-reverse}
-.chat-msg-avatar{width:26px;height:26px;border-radius:8px;background:rgba(200,151,58,.1);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--gold);font-family:var(--serif);flex-shrink:0}
-.chat-msg-bubble{max-width:82%;padding:.65rem .875rem;border-radius:12px;font-size:.83rem;line-height:1.6}
-.chat-msg .chat-msg-bubble{background:rgba(240,237,232,.05);color:rgba(240,237,232,.85);border:1px solid rgba(240,237,232,.05)}
-.chat-msg.user .chat-msg-bubble{background:var(--gold);color:var(--midnight);font-weight:500}
-.chat-agent-name{font-family:var(--mono);font-size:.58rem;letter-spacing:.07em;text-transform:uppercase;color:var(--gold);margin-bottom:.25rem}
-.chat-typing{display:flex;gap:4px;align-items:center;padding:.5rem .875rem;background:rgba(240,237,232,.05);border-radius:10px;border:1px solid rgba(240,237,232,.05);width:fit-content}
-.chat-typing span{width:5px;height:5px;background:var(--gold);border-radius:50%;animation:bounce .9s infinite}
-.chat-typing span:nth-child(2){animation-delay:.15s}
-.chat-typing span:nth-child(3){animation-delay:.3s}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.chat-fallback{padding:.75rem 1.25rem;background:rgba(29,184,135,.06);border-top:1px solid rgba(29,184,135,.12);font-size:.75rem;color:var(--emerald);display:none}
-.chat-fallback a{font-weight:600;text-decoration:underline}
-.chat-input-row{border-top:1px solid var(--mist);padding:.875rem 1rem;display:flex;gap:.625rem}
-.chat-input{flex:1;background:rgba(240,237,232,.05);border:1px solid rgba(240,237,232,.08);border-radius:10px;padding:.6rem .875rem;color:var(--ink);font-family:var(--sans);font-size:.85rem;transition:border-color .2s}
-.chat-input:focus{outline:none;border-color:rgba(200,151,58,.35)}
-.chat-input::placeholder{color:rgba(240,237,232,.2)}
-.chat-send{width:36px;height:36px;border-radius:10px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s;flex-shrink:0}
-.chat-send:hover{opacity:.85}
-.chat-send:disabled{opacity:.35;cursor:not-allowed}
-
-/* SCROLL REVEAL */
-.reveal{opacity:0;transform:translateY(24px);transition:opacity .65s cubic-bezier(.22,1,.36,1),transform .65s cubic-bezier(.22,1,.36,1)}
-.reveal.visible{opacity:1;transform:none}
-
-/* RESPONSIVE */
-@media(max-width:1024px){
-  .hero-inner,.cta-grid,.chain-grid{grid-template-columns:1fr;gap:3rem}
-  .hero-right{display:none}
-  .programas-grid{grid-template-columns:1fr 1fr}
-  .agentes-grid{grid-template-columns:repeat(3,1fr)}
-  .how-steps{grid-template-columns:1fr 1fr}
-  .philo-grid{grid-template-columns:1fr}
-  .footer-grid{grid-template-columns:1fr 1fr}
-}
-@media(max-width:640px){
-  .nav-links,.nav-cta{display:none}
-  .hero-stats{grid-template-columns:1fr 1fr}
-  .programas-grid,.how-steps{grid-template-columns:1fr}
-  .agentes-grid{grid-template-columns:1fr 1fr}
-  .form-2{grid-template-columns:1fr}
-  .footer-grid{grid-template-columns:1fr}
-  .chain-grid{grid-template-columns:1fr}
-  .chain-code{display:none}
-}
-`}</style>
-      <div dangerouslySetInnerHTML={{__html: `
-
-<!-- NAV -->
-<nav>
-  <a href="/" class="nav-brand">
-    <div class="nav-gem">I</div>
-    <div>
-      <div class="nav-name">Instituto Virtual de IA</div>
-      <div class="nav-tag">Mejoramiento Profesional</div>
-    </div>
-  </a>
-  <ul class="nav-links">
-    <li><a href="#programas">Programas</a></li>
-    <li><a href="#agentes">Agentes IA</a></li>
-    <li><a href="#certificacion">Certificación</a></li>
-    <li><a href="https://t.me/iainstituto_bot" target="_blank">Telegram</a></li>
-  </ul>
-  <a href="#registro" class="nav-cta">Inscribirme gratis</a>
-</nav>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-noise"></div>
-  <div class="hero-gradient"></div>
-  <div class="hero-gradient2"></div>
-  <div class="hero-inner">
-    <div>
-      <div class="hero-eyebrow">
-        <div class="hero-eyebrow-dot"></div>
-        <span class="hero-eyebrow-text">Instituto Virtual de IA · 2026</span>
-      </div>
-      <h1 class="hero-h1">
-        <em>Ciencia</em> con<br>
-        <span class="line-accent">conciencia.</span><br>
-        Conocimiento<br>con sabiduría.
-      </h1>
-      <p class="hero-sub">Mejoramiento profesional con IA para emprendedores, agricultores, profesionales y familias de América Latina.</p>
-      <div class="hero-quote">
-        <p class="hero-quote-text">"<span id="gandhi-typed"></span>"</p>
-        <cite class="hero-quote-cite">Mahatma Gandhi · Principio fundacional</cite>
-      </div>
-      <div class="hero-actions">
-        <a href="#registro" class="btn-primary">
-          Iniciar diagnóstico gratuito
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <a href="#programas" class="btn-ghost">Ver programas</a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat"><span class="stat-num">20</span><span class="stat-label">Programas</span></div>
-        <div class="stat"><span class="stat-num">14</span><span class="stat-label">Agentes IA</span></div>
-        <div class="stat"><span class="stat-num">24/7</span><span class="stat-label">Disponible</span></div>
-        <div class="stat"><span class="stat-num">$0</span><span class="stat-label">Costo inicial</span></div>
-      </div>
-    </div>
-    <div class="hero-right">
-      <div class="hero-card">
-        <span class="hero-card-icon">🌾</span>
-        <div class="hero-card-title">AgriTech & Ingeniería</div>
-        <div class="hero-card-desc">Agricultura de precisión, IoT industrial, mecatrónica. Estándares Wageningen, MIT, ETH Zurich.</div>
-        <span class="hero-card-badge">84 créditos · Grado completo</span>
-      </div>
-      <div class="hero-card">
-        <span class="hero-card-icon">💼</span>
-        <div class="hero-card-title">Negocios, Finanzas & Derecho</div>
-        <div class="hero-card-desc">ERP con IA, contratos inteligentes, FinTech. Cada egresado una Corporación Unipersonal.</div>
-        <span class="hero-card-badge">Ref. Wharton · LSE · Harvard</span>
-      </div>
-      <div class="hero-card">
-        <span class="hero-card-icon">🧠</span>
-        <div class="hero-card-title">Humanidades & MBA Tecnológico</div>
-        <div class="hero-card-desc">Doctrina Social integrada. Liderazgo, pedagogía y alta gerencia con LLMs. 60 ECTS.</div>
-        <span class="hero-card-badge">Posgrado · Defensa ante Tribunal IA</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FILOSOFÍA -->
-<div class="philo-section">
-  <div class="philo-grid">
-    <div class="philo-item reveal">
-      <span class="philo-glyph">✝</span>
-      <div class="philo-title">Dignidad Humana</div>
-      <p class="philo-text">Toda formación parte de la dignidad inalienable de la persona. Los negocios, vocaciones nobles cuando sirven al bien común.</p>
-    </div>
-    <div class="philo-item reveal">
-      <span class="philo-glyph">☮</span>
-      <div class="philo-title">Ciencia con Conciencia</div>
-      <p class="philo-text">La tecnología al servicio del ser humano, nunca al revés. La IA como herramienta de liberación, no de dependencia.</p>
-    </div>
-    <div class="philo-item reveal">
-      <span class="philo-glyph">⚖</span>
-      <div class="philo-title">Subsidiariedad Global</div>
-      <p class="philo-text">Corporaciones unipersonales capaces de operar globalmente, enraizadas en la responsabilidad local y comunitaria.</p>
-    </div>
-  </div>
-</div>
-
-<!-- HOW IT WORKS -->
-<section class="how-section">
-  <div class="section-inner">
-    <div class="label">Proceso</div>
-    <h2 class="title">Del diagnóstico a la <em>certificación</em></h2>
-    <p class="lead">Cuatro pasos. Tu agente te acompaña en cada uno.</p>
-    <div class="how-steps">
-      <div class="how-step reveal" data-n="1">
-        <span class="how-step-icon">🌟</span>
-        <div class="how-step-title">Diagnóstico personalizado</div>
-        <p class="how-step-desc">Alejandra evalúa tu perfil, detecta tu nivel real y diseña tu ruta de aprendizaje. En minutos, no semanas.</p>
-      </div>
-      <div class="how-step reveal" data-n="2">
-        <span class="how-step-icon">🗺</span>
-        <div class="how-step-title">Ruta a tu medida</div>
-        <p class="how-step-desc">Programa personalizado con agente tutor dedicado. Estándares MIT, Wageningen o Harvard según tu área.</p>
-      </div>
-      <div class="how-step reveal" data-n="3">
-        <span class="how-step-icon">📱</span>
-        <div class="how-step-title">Aprendes sin horarios</div>
-        <p class="how-step-desc">Por WhatsApp, Telegram o web. Tu mentor siempre disponible. Evaluaciones por escenarios reales, nunca opción múltiple.</p>
-      </div>
-      <div class="how-step reveal" data-n="4">
-        <span class="how-step-icon">🏅</span>
-        <div class="how-step-title">Certificado blockchain</div>
-        <p class="how-step-desc">Credencial digital en Polygon L2. Verificable globalmente. Inmutable. Compatible con LinkedIn y sistemas de RRHH.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- PROGRAMAS -->
-<section class="programas-section" id="programas">
-  <div class="section-inner">
-    <div class="label">Oferta académica</div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:3rem">
-      <h2 class="title" style="margin-bottom:0">Programas de <em>Mejoramiento Profesional</em></h2>
-      <a href="/programas" class="ver-todos">Ver los 20 programas <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-    </div>
-    <div class="programas-grid" id="prog-grid">
-      <!-- Renderizado por JS desde Supabase -->
-    </div>
-  </div>
-</section>
-
-<!-- DSI QUOTE -->
-<div class="dsi-section">
-  <div class="dsi-inner reveal">
-    <span class="dsi-cross">✝</span>
-    <blockquote class="dsi-quote">"La persona humana es el principio, sujeto y fin de todas las instituciones sociales."</blockquote>
-    <cite class="dsi-cite">Gaudium et Spes · Doctrina Social de la Iglesia · Principio rector</cite>
-    <p class="dsi-sub">Cada programa integra un módulo obligatorio de DSI: dignidad del trabajo, solidaridad, bien común y ecología integral.</p>
-  </div>
-</div>
-
-<!-- AGENTES -->
-<section class="agentes-section" id="agentes">
-  <div class="section-inner">
-    <div class="label">Cuerpo docente virtual</div>
-    <h2 class="title">12 agentes que <em>aprenden</em> mientras tú aprendes</h2>
-    <p class="lead">Ninguno da la respuesta directa. Todos enseñan a pensar. Cada uno recuerda tu historia.</p>
-    <div class="agentes-grid">
-      <div class="agente-card reveal" style="--ag-color:rgba(29,184,135,.1);--ag-bg:rgba(29,184,135,.08);--ag-border:rgba(29,184,135,.2);--ag-text:#1DB887">
-        <div class="agente-avatar">A</div>
-        <div class="agente-name">Alejandra</div>
-        <div class="agente-role">Onboarding · Diagnóstico</div>
-        <p class="agente-desc">Te recibe, entiende tu perfil en profundidad y celebra cada pequeño logro como un hito real.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(200,151,58,.1);--ag-bg:rgba(200,151,58,.08);--ag-border:rgba(200,151,58,.2);--ag-text:#C8973A">
-        <div class="agente-avatar">E</div>
-        <div class="agente-name">Don Ernesto</div>
-        <div class="agente-role">Tutor AgriTech</div>
-        <p class="agente-desc">DPV, bio-fenología, iAgri. Nunca da la respuesta — usa analogías del campo latinoamericano.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(130,170,255,.1);--ag-bg:rgba(130,170,255,.06);--ag-border:rgba(130,170,255,.2);--ag-text:#82AAFF">
-        <div class="agente-avatar">M</div>
-        <div class="agente-name">Profe Marcos</div>
-        <div class="agente-role">Tutor IoT · Hardware</div>
-        <p class="agente-desc">"El hardware no perdona atajos." PCBs con KiCad, MQTT, Edge AI. Exige calcular antes de implementar.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(200,151,58,.1);--ag-bg:rgba(200,151,58,.08);--ag-border:rgba(200,151,58,.2);--ag-text:#E8C27A">
-        <div class="agente-avatar">C</div>
-        <div class="agente-name">Lcda. Carmen</div>
-        <div class="agente-role">Tutor Finanzas · OPC</div>
-        <p class="agente-desc">Todo con tu propio negocio como caso real. Alerta cuando el plan financiero tiene errores graves.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(199,120,221,.1);--ag-bg:rgba(199,120,221,.06);--ag-border:rgba(199,120,221,.2);--ag-text:#C778DD">
-        <div class="agente-avatar">S</div>
-        <div class="agente-name">Sofía</div>
-        <div class="agente-role">Tutor Marketing</div>
-        <p class="agente-desc">"Dame 5 minutos y te saco 5 ideas de contenido ahora mismo." Todo personalizado a tu región.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(130,170,255,.1);--ag-bg:rgba(130,170,255,.06);--ag-border:rgba(130,170,255,.2);--ag-text:#82AAFF">
-        <div class="agente-avatar">D</div>
-        <div class="agente-name">DevBot</div>
-        <div class="agente-role">Tutor Software · IA</div>
-        <p class="agente-desc">Stack real: Next.js, Supabase, Claude API. Nunca aprueba código que no puedas explicar.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(247,140,108,.1);--ag-bg:rgba(247,140,108,.06);--ag-border:rgba(247,140,108,.2);--ag-text:#F78C6C">
-        <div class="agente-avatar">T</div>
-        <div class="agente-name">El Tribunal</div>
-        <div class="agente-role">Evaluador por Crisis</div>
-        <p class="agente-desc">Genera escenarios JSON de fallos reales. Evalúa lógica, eficiencia, seguridad. Sin opción múltiple.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(29,184,135,.1);--ag-bg:rgba(29,184,135,.06);--ag-border:rgba(29,184,135,.2);--ag-text:#1DB887">
-        <div class="agente-avatar">M</div>
-        <div class="agente-name">Tu Mentor</div>
-        <div class="agente-role">Mentor Personal 1:1</div>
-        <p class="agente-desc">Recuerda tu nombre, tu negocio, tus metas. La consistencia es su superpoder. Siempre disponible.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(247,140,108,.1);--ag-bg:rgba(247,140,108,.06);--ag-border:rgba(247,140,108,.2);--ag-text:#F78C6C">
-        <div class="agente-avatar">I</div>
-        <div class="agente-name">Impulsa</div>
-        <div class="agente-role">Coach de Persistencia</div>
-        <p class="agente-desc">Se activa cuando llevas 3 días sin entrar. "Aunque sea 15 minutos hoy cuenta." Cero frases genéricas.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(200,151,58,.1);--ag-bg:rgba(200,151,58,.08);--ag-border:rgba(200,151,58,.2);--ag-text:#C8973A">
-        <div class="agente-avatar">A</div>
-        <div class="agente-name">El Asesor</div>
-        <div class="agente-role">Emprendimiento · OPC</div>
-        <p class="agente-desc">"¿Tienes clientes reales o solo la idea?" Conecta con SAS, BID Lab, CAF y aceleradoras reales.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(130,170,255,.1);--ag-bg:rgba(130,170,255,.06);--ag-border:rgba(130,170,255,.2);--ag-text:#82AAFF">
-        <div class="agente-avatar">T</div>
-        <div class="agente-name">TechBot</div>
-        <div class="agente-role">Soporte Técnico</div>
-        <p class="agente-desc">Máximo 3 pasos a la vez. Confirma antes de continuar. Para tu abuela o para tu CTO.</p>
-      </div>
-      <div class="agente-card reveal" style="--ag-color:rgba(29,184,135,.1);--ag-bg:rgba(29,184,135,.06);--ag-border:rgba(29,184,135,.2);--ag-text:#1DB887">
-        <div class="agente-avatar">G</div>
-        <div class="agente-name">IntegrityGuard</div>
-        <div class="agente-role">Proctoring Biométrico</div>
-        <p class="agente-desc">Validación facial Edge AI en el navegador. Solo vectores. Nunca almacena video.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- BLOCKCHAIN -->
-<section class="chain-section" id="certificacion">
-  <div class="section-inner">
-    <div class="chain-grid">
-      <div>
-        <div class="label">Certificación</div>
-        <h2 class="title">Tu logro, <em>inmutable</em> para siempre</h2>
-        <p class="lead">Cada certificado de mejoramiento profesional es un activo digital verificable por cualquier empleador, en cualquier país, sin intermediarios.</p>
-        <ul class="chain-steps">
-          <li class="chain-step reveal">
-            <span class="chain-step-n">01</span>
-            <div><div class="chain-step-title">Hash del diploma al aprobar</div><p class="chain-step-desc">Hash criptográfico único de tu evaluación. Nadie puede alterarlo.</p></div>
-          </li>
-          <li class="chain-step reveal">
-            <span class="chain-step-n">02</span>
-            <div><div class="chain-step-title">Inyección en Polygon L2</div><p class="chain-step-desc">Smart contract en Polygon. Bajo costo, alta velocidad, verificación pública.</p></div>
-          </li>
-          <li class="chain-step reveal">
-            <span class="chain-step-n">03</span>
-            <div><div class="chain-step-title">Estándar MIT Blockcerts</div><p class="chain-step-desc">Compatible con LinkedIn, Indeed y sistemas de RRHH globales.</p></div>
-          </li>
-          <li class="chain-step reveal">
-            <span class="chain-step-n">04</span>
-            <div><div class="chain-step-title">Verificación sin intermediarios</div><p class="chain-step-desc">URL institucional verificable por cualquier persona. Sin trámites.</p></div>
-          </li>
-        </ul>
-      </div>
-      <div class="chain-code">
-        <div class="cm">// Blockcerts · Polygon L2 · MIT Standard</div>
-        <div><span class="kw">const</span> <span class="nm">certificado</span> = {</div>
-        <div>&nbsp;&nbsp;<span class="nm">tipo</span>: <span class="st">"CertificadoMejoramiento"</span>,</div>
-        <div>&nbsp;&nbsp;<span class="nm">programa</span>: <span class="st">"[Tu programa]"</span>,</div>
-        <div>&nbsp;&nbsp;<span class="nm">creditos</span>: <span class="vl">84</span>,</div>
-        <div>&nbsp;&nbsp;<span class="nm">blockchain</span>: {</div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="nm">red</span>: <span class="st">"Polygon L2"</span>,</div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="nm">estandar</span>: <span class="st">"MIT Blockcerts v3"</span>,</div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="nm">tx_hash</span>: <span class="st">"0x7f3a...c429"</span>,</div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="nm">verificable</span>: <span class="ok">true</span></div>
-        <div>&nbsp;&nbsp;},</div>
-        <div>&nbsp;&nbsp;<span class="nm">nota</span>: <span class="st">"Mejoramiento Profesional.</span></div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="st">No confiere título académico."</span></div>
-        <div>}</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA REGISTRO -->
-<section class="cta-section" id="registro">
-  <div class="section-inner">
-    <div class="cta-grid">
-      <div>
-        <div class="label">Inscripción gratuita</div>
-        <h2 class="title">Comienza hoy.<br>Tu mentor <em>te espera.</em></h2>
-        <p class="lead">Diagnóstico gratuito. Sin tarjeta de crédito. Alejandra te contacta en minutos por WhatsApp.</p>
-        <ul class="cta-perks">
-          <li class="cta-perk reveal">
-            <div class="cta-perk-icon">🎯</div>
-            <div><div class="cta-perk-title">Diagnóstico personalizado gratuito</div><div class="cta-perk-desc">Alejandra evalúa tu nivel y recomienda el programa ideal para ti.</div></div>
-          </li>
-          <li class="cta-perk reveal">
-            <div class="cta-perk-icon">📱</div>
-            <div><div class="cta-perk-title">Aprende desde WhatsApp o Telegram</div><div class="cta-perk-desc">Sin app extra. Sin horarios fijos. Desde donde estés.</div></div>
-          </li>
-          <li class="cta-perk reveal">
-            <div class="cta-perk-icon">🏅</div>
-            <div><div class="cta-perk-title">Certificado blockchain al completar</div><div class="cta-perk-desc">Verificable globalmente. Inmutable en Polygon L2. Estándar MIT.</div></div>
-          </li>
-          <li class="cta-perk reveal">
-            <div class="cta-perk-icon">♾</div>
-            <div><div class="cta-perk-title">Mentor vitalicio</div><div class="cta-perk-desc">Tu agente no se olvida de ti al terminar. Te acompaña de por vida.</div></div>
-          </li>
-        </ul>
-      </div>
-      <div class="cta-form">
-        <h3>Iniciar diagnóstico gratuito</h3>
-        <div class="form-2">
-          <div class="form-row"><label>Nombre *</label><input id="f-nombre" type="text" placeholder="Tu nombre"></div>
-          <div class="form-row"><label>Apellido</label><input id="f-apellido" type="text" placeholder="Apellido"></div>
-        </div>
-        <div class="form-row"><label>Email</label><input id="f-email" type="email" placeholder="tu@email.com"></div>
-        <div class="form-row"><label>WhatsApp *</label><input id="f-wa" type="tel" placeholder="+503 7000-0000"></div>
-        <div class="form-2">
-          <div class="form-row"><label>País</label>
-            <select id="f-pais">
-              <option>El Salvador</option><option>Costa Rica</option><option>Venezuela</option>
-              <option>Guatemala</option><option>Honduras</option><option>México</option>
-              <option>Colombia</option><option>EE.UU.</option><option>Otro</option>
-            </select>
-          </div>
-          <div class="form-row"><label>Perfil</label>
-            <select id="f-perfil">
-              <option>Emprendedor/a</option><option>Ama de casa</option><option>Agricultor</option>
-              <option>Profesional</option><option>Técnico</option><option>Empresario PYME</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row"><label>Área de interés</label>
-          <select id="f-area">
-            <option>Ingeniería y Tecnología</option><option>AgriTech · Agricultura</option>
-            <option>Salud y Telemedicina</option><option>Administración y Finanzas</option>
-            <option>Derecho e Ingeniería Legal</option><option>Humanidades y Educación</option>
-            <option>MBA · Posgrado</option><option>No lo sé aún — quiero orientación</option>
-          </select>
-        </div>
-        <button class="form-submit" id="form-btn" onclick="submitForm()">Iniciar mi camino →</button>
-        <p class="form-note">DATOS PROTEGIDOS · GDPR COMPLIANT · SIN SPAM</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-grid">
-      <div>
-        <div class="nav-gem" style="width:40px;height:40px">I</div>
-        <div class="footer-brand-name">Instituto Virtual de IA</div>
-        <p class="footer-brand-desc">Mejoramiento profesional con los más altos estándares internacionales, bajo los principios de la Doctrina Social y el pensamiento gandhiano.</p>
-        <div class="footer-motto">"Be the change you wish to see in the world." — Gandhi</div>
-      </div>
-      <div>
-        <div class="footer-col-title">Programas</div>
-        <div class="footer-col">
-          <a href="/programas">Ingeniería</a>
-          <a href="/programas">AgriTech</a>
-          <a href="/programas">Salud</a>
-          <a href="/programas">Administración</a>
-          <a href="/programas">Humanidades</a>
-          <a href="/programas">MBA Tecnológico</a>
-        </div>
-      </div>
-      <div>
-        <div class="footer-col-title">Contacto</div>
-        <div class="footer-col">
-          <a href="https://t.me/iainstituto_bot" target="_blank">Telegram: @iainstituto_bot</a>
-          <a href="#registro">Formulario de registro</a>
-          <a href="/programas">Ver todos los programas</a>
-        </div>
-        <div style="margin-top:1.5rem;padding:.875rem 1rem;background:rgba(29,184,135,.06);border:1px solid rgba(29,184,135,.12);border-radius:10px">
-          <div style="font-family:var(--mono);font-size:.62rem;color:var(--emerald);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.35rem">Certificados</div>
-          <p style="font-size:.75rem;color:var(--ink-30);line-height:1.6">Certificados de Mejoramiento Profesional. No conferimos títulos académicos formales.</p>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span class="footer-copy">© 2026 Instituto Virtual de IA. Todos los derechos reservados.</span>
-      <span class="footer-tg">@iainstituto_bot · Telegram</span>
-    </div>
-  </div>
-</footer>
-
-<!-- CHAT WIDGET -->
-<button class="chat-fab" onclick="toggleChat()" id="chat-fab">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#060A12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-  <span class="chat-fab-badge">IA</span>
-</button>
-
-<div class="chat-panel" id="chat-panel">
-  <div class="chat-panel-head">
-    <div class="chat-head-avatar">A</div>
-    <div>
-      <div class="chat-head-name">Alejandra</div>
-      <div class="chat-head-status">En línea · Instituto Virtual de IA</div>
-    </div>
-  </div>
-  <div class="chat-msgs" id="chat-msgs">
-    <div class="chat-msg">
-      <div class="chat-msg-avatar">A</div>
-      <div>
-        <div class="chat-agent-name">Alejandra · Onboarding</div>
-        <div class="chat-msg-bubble">¡Hola! Soy Alejandra, tu agente de orientación del Instituto Virtual de IA. ¿En qué área quieres mejorar profesionalmente?</div>
-      </div>
-    </div>
-  </div>
-  <div class="chat-fallback" id="chat-fallback">
-    Servicio IA no disponible · <a href="https://t.me/iainstituto_bot" target="_blank">Continuar en @iainstituto_bot →</a>
-  </div>
-  <div class="chat-input-row">
-    <input class="chat-input" id="chat-input" type="text" placeholder="Escribe tu mensaje..." onkeydown="if(event.key==='Enter')sendChat()">
-    <button class="chat-send" id="chat-send" onclick="sendChat()">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M15 8H1M8 1l7 7-7 7" stroke="#060A12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-  </div>
-</div>
-
-<script>
-// Gandhi typewriter
-(function(){
-  const text = 'El futuro depende de lo que hagamos en el presente.';
-  const el = document.getElementById('gandhi-typed');
-  if (!el) return;
-  let i = 0;
-  const type = () => {
-    if (i < text.length) {
-      el.textContent += text[i++];
-      setTimeout(type, 38 + Math.random() * 22);
-    } else {
-      el.style.cssText += 'border:none';
-      el.parentElement.querySelector('::after') && (el.nextSibling.style.display = 'none');
-      // remove cursor after done
-      el.style.cssText = '';
-      el.insertAdjacentHTML('afterend', '<span style="display:none">|</span>');
-    }
+  const selFac = async (cod: string) => {
+    setArea(cod); setPrograma(null); setMateria(null); setFases([]); setMaterias([]);
+    setLoading(true);
+    try {
+      const r = await fetch(`${SUPA}/rest/v1/iv_programas?select=id,codigo,titulo,nivel,creditos,habilidad_clave,proyecto_final&facultad_codigo=eq.${cod}&activo=eq.true&order=creditos.desc`, {headers:hdr});
+      const d = await r.json();
+      setProgramas(Array.isArray(d)?d:[]);
+    } catch { setProgramas([]); }
+    setLoading(false);
   };
-  setTimeout(type, 800);
-})();
 
-// Scroll reveal
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: 0.08 });
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  const selProg = async (p: any) => {
+    setPrograma(p.codigo); setMateria(null); setMaterias([]);
+    setLoading(true);
+    try {
+      const r = await fetch(`${SUPA}/rest/v1/iv_fases?select=id,numero,nombre,creditos,semanas&programa_id=eq.${p.id}&order=orden`, {headers:hdr});
+      const d = await r.json();
+      setFases(Array.isArray(d)?d:[]);
+    } catch { setFases([]); }
+    setLoading(false);
+  };
 
-// Load programas from Supabase
-(async function loadProgramas(){
-  const SUPABASE_URL = 'https://jmkkfmthysrvfkmkjtxf.supabase.co';
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impta2tmbXRoeXNydmZrbWtqdHhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNzE0NDYsImV4cCI6MjA5NTk0NzQ0Nn0.jQ6cPI8yiHjB2fyEn7TzlIi_bco_H_dObVnX9gCEGEM';
-  const ICONS = {agritech:'🌾',iot_mecanica:'⚙️',administracion_finanzas:'💼',negocios_mercadeo:'📱',ingenieria_software_ia:'💻',sostenibilidad:'🌿',micro_emprendimiento:'🏠',salud_bienestar:'🩺',educacion_familiar:'📚'};
-  const COLORS = {agritech:'#1DB887',iot_mecanica:'#82AAFF',administracion_finanzas:'#C8973A',negocios_mercadeo:'#C778DD',ingenieria_software_ia:'#C3E88D',sostenibilidad:'#1DB887',micro_emprendimiento:'#F78C6C',salud_bienestar:'#82AAFF',educacion_familiar:'#E8C27A'};
-  const NIVEL = {basico:'Básico',intermedio:'Intermedio',avanzado:'Avanzado',experto:'Grado Completo'};
-  try {
-    const res = await fetch(\`\${SUPABASE_URL}/rest/v1/programas_academicos?select=id,codigo,titulo,vertical,nivel,creditos,proyecto_final,habilidad_clave&eq.activo=true&order=creditos.desc&limit=6\`, {
-      headers: { apikey: ANON, Authorization: \`Bearer \${ANON}\`, 'Accept-Profile': 'instituto_virtual' }
-    });
-    if (!res.ok) throw new Error('fetch failed');
-    const data = await res.json();
-    if (!data || !data.length) throw new Error('no data');
-    const grid = document.getElementById('prog-grid');
-    grid.innerHTML = data.map(p => {
-      const color = COLORS[p.vertical] || '#C8973A';
-      const icon = ICONS[p.vertical] || '📚';
-      const nivel = NIVEL[p.nivel] || p.nivel;
-      return \`<a href="/programas/\${p.codigo}" class="prog-card reveal" style="--prog-color:\${color}22;--prog-accent:\${color}">
-        <div class="prog-header">
-          <span class="prog-icon">\${icon}</span>
-          <div class="prog-level">\${nivel}</div>
-          <div class="prog-title">\${p.titulo}</div>
+  const selFase = async (faseId: string) => {
+    setLoading(true);
+    try {
+      const r = await fetch(`${SUPA}/rest/v1/iv_materias?select=id,codigo,nombre,creditos,horas_semanales,horas_teoria,horas_practica,tipo,software_tools,evaluacion_tipo,agente_codigo&fase_id=eq.${faseId}&order=orden`, {headers:hdr});
+      const d = await r.json();
+      setMaterias(Array.isArray(d)?d:[]);
+    } catch { setMaterias([]); }
+    setLoading(false);
+  };
+
+  const facActual = FACULTADES.find(f=>f.codigo===area);
+  const progActual = programas.find(p=>p.codigo===programa);
+  const NIVEL_LABEL: Record<string,string> = {tecnico:"Técnico",basico:"Básico",intermedio:"Intermedio",avanzado:"Avanzado",experto:"Grado Completo",diplomado:"Diplomado",posgrado:"Maestría"};
+
+  return (
+    <div style={{background:"var(--navy,#0C1525)",border:"1px solid rgba(240,237,232,.08)",borderRadius:20,overflow:"hidden"}}>
+      {/* breadcrumb */}
+      <div style={{padding:"16px 24px",borderBottom:"1px solid rgba(240,237,232,.06)",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+        <span onClick={()=>{setArea(null);setPrograma(null);setMateria(null)}} style={{cursor:"pointer",fontSize:13,color:area?"rgba(200,151,58,.7)":"#C8973A",fontWeight:500}}>Áreas de conocimiento</span>
+        {area && <><span style={{color:"rgba(240,237,232,.2)"}}>›</span>
+          <span onClick={()=>{setPrograma(null);setMateria(null)}} style={{cursor:"pointer",fontSize:13,color:programa?"rgba(200,151,58,.7)":"#C8973A",fontWeight:500}}>{facActual?.nombre}</span></>}
+        {programa && <><span style={{color:"rgba(240,237,232,.2)"}}>›</span>
+          <span style={{fontSize:13,color:"#C8973A",fontWeight:500}}>{progActual?.titulo}</span></>}
+      </div>
+
+      <div style={{padding:24,minHeight:340}}>
+        {loading && <div style={{textAlign:"center",padding:"60px 0",color:"rgba(240,237,232,.4)",fontSize:14}}>Cargando...</div>}
+
+        {/* NIVEL 1 — Facultades */}
+        {!loading && !area && (
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+            {FACULTADES.map(f=>(
+              <div key={f.codigo} onClick={()=>selFac(f.codigo)}
+                style={{background:f.bg,border:`1px solid ${f.color}30`,borderRadius:12,padding:"16px 14px",cursor:"pointer",transition:"all .2s"}}
+                onMouseEnter={e=>(e.currentTarget.style.transform="translateY(-2px)")}
+                onMouseLeave={e=>(e.currentTarget.style.transform="none")}>
+                <div style={{fontSize:22,marginBottom:6}}>{f.emoji}</div>
+                <div style={{fontSize:13,fontWeight:600,color:"#F0EDE8",marginBottom:3}}>{f.nombre}</div>
+                <div style={{fontSize:11,color:f.color,fontFamily:"monospace"}}>{f.num} programas →</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* NIVEL 2 — Programas */}
+        {!loading && area && !programa && (
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <div style={{marginBottom:8,fontSize:13,color:"rgba(240,237,232,.5)"}}>Selecciona un programa para ver el pensum completo</div>
+            {programas.length===0 && <div style={{color:"rgba(240,237,232,.4)",fontSize:14,padding:"40px 0",textAlign:"center"}}>Programas de esta facultad en preparación</div>}
+            {programas.map(p=>(
+              <div key={p.codigo} onClick={()=>selProg(p)}
+                style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(240,237,232,.03)",border:"1px solid rgba(240,237,232,.07)",borderRadius:10,padding:"14px 18px",cursor:"pointer",transition:"all .18s"}}
+                onMouseEnter={e=>(e.currentTarget.style.borderColor="rgba(200,151,58,.3)")}
+                onMouseLeave={e=>(e.currentTarget.style.borderColor="rgba(240,237,232,.07)")}>
+                <div>
+                  <div style={{fontSize:14,fontWeight:600,color:"#F0EDE8",marginBottom:2}}>{p.titulo}</div>
+                  <div style={{fontSize:12,color:"rgba(240,237,232,.45)"}}>{p.proyecto_final||p.habilidad_clave||""}</div>
+                </div>
+                <div style={{textAlign:"right",flexShrink:0,marginLeft:16}}>
+                  <div style={{fontSize:20,color:"#C8973A",fontFamily:"serif",fontWeight:400}}>{p.creditos}</div>
+                  <div style={{fontSize:10,color:"rgba(240,237,232,.3)",fontFamily:"monospace"}}>créditos</div>
+                  <div style={{marginTop:4,fontSize:10,padding:"2px 8px",borderRadius:4,background:"rgba(200,151,58,.1)",color:"#C8973A",fontFamily:"monospace"}}>{NIVEL_LABEL[p.nivel]||p.nivel}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* NIVEL 3 — Fases y materias */}
+        {!loading && programa && (
+          <div>
+            <div style={{marginBottom:16,fontSize:13,color:"rgba(240,237,232,.5)"}}>{fases.length} fases · Haz clic en una fase para ver sus materias</div>
+            {fases.length===0 && <div style={{color:"rgba(240,237,232,.4)",fontSize:14,padding:"40px 0",textAlign:"center"}}>Pensum en preparación</div>}
+            {fases.map(f=>(
+              <div key={f.id} style={{marginBottom:16}}>
+                <div onClick={()=>selFase(f.id)}
+                  style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:`rgba(200,151,58,.08)`,border:"1px solid rgba(200,151,58,.2)",borderRadius:10,padding:"12px 18px",cursor:"pointer"}}
+                  onMouseEnter={e=>(e.currentTarget.style.background="rgba(200,151,58,.14)")}
+                  onMouseLeave={e=>(e.currentTarget.style.background="rgba(200,151,58,.08)")}>
+                  <div>
+                    <span style={{fontFamily:"monospace",fontSize:11,color:"rgba(200,151,58,.7)",marginRight:10}}>F{f.numero}</span>
+                    <span style={{fontSize:14,fontWeight:600,color:"#F0EDE8"}}>{f.nombre}</span>
+                  </div>
+                  <div style={{display:"flex",gap:12}}>
+                    <span style={{fontSize:12,color:"rgba(240,237,232,.5)"}}>{f.creditos} cr</span>
+                    <span style={{fontSize:12,color:"rgba(240,237,232,.4)"}}>{f.semanas} sem</span>
+                    <span style={{fontSize:12,color:"#C8973A"}}>ver materias →</span>
+                  </div>
+                </div>
+                {/* Materias */}
+                {materias.length>0 && (
+                  <div style={{marginTop:8,paddingLeft:16,display:"flex",flexDirection:"column",gap:6}}>
+                    {materias.map((m,i)=>(
+                      <div key={m.id} style={{background:"rgba(240,237,232,.02)",border:"1px solid rgba(240,237,232,.05)",borderRadius:8,padding:"10px 14px"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                          <div>
+                            <div style={{fontSize:13,fontWeight:500,color:"#F0EDE8"}}>{m.nombre}</div>
+                            <div style={{marginTop:4,display:"flex",gap:6,flexWrap:"wrap"}}>
+                              <span style={{fontSize:10,color:"rgba(240,237,232,.4)",fontFamily:"monospace"}}>{m.codigo}</span>
+                              <span style={{fontSize:10,color:"rgba(29,184,135,.7)",fontFamily:"monospace"}}>{m.horas_teoria}h teoría + {m.horas_practica}h práctica</span>
+                              {m.evaluacion_tipo && <span style={{fontSize:10,padding:"1px 6px",borderRadius:4,background:"rgba(139,92,246,.12)",color:"rgba(139,92,246,.9)",fontFamily:"monospace"}}>{m.evaluacion_tipo}</span>}
+                            </div>
+                            {m.software_tools?.length>0 && (
+                              <div style={{marginTop:6,display:"flex",gap:4,flexWrap:"wrap"}}>
+                                {m.software_tools.map((s:string)=>(
+                                  <span key={s} style={{fontSize:10,padding:"2px 7px",borderRadius:4,background:"rgba(200,151,58,.08)",color:"#C8973A",border:"1px solid rgba(200,151,58,.15)",fontFamily:"monospace"}}>{s}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{textAlign:"right",flexShrink:0,marginLeft:12}}>
+                            <div style={{fontSize:18,color:"#C8973A",fontFamily:"serif"}}>{m.creditos}</div>
+                            <div style={{fontSize:9,color:"rgba(240,237,232,.3)",fontFamily:"monospace"}}>cr</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── SECCIÓN PREGUNTAS ────────────────────────────────────────────────────────
+function FAQ() {
+  const [open, setOpen] = useState<number|null>(null);
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      {VALORACION_TEXTS.map((item,i)=>(
+        <div key={i} style={{background:"rgba(240,237,232,.03)",border:"1px solid rgba(240,237,232,.07)",borderRadius:12,overflow:"hidden"}}>
+          <div onClick={()=>setOpen(open===i?null:i)}
+            style={{padding:"16px 20px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:15,fontWeight:500,color:"#F0EDE8"}}>{item.q}</span>
+            <span style={{color:"#C8973A",fontSize:18,transition:"transform .2s",transform:open===i?"rotate(45deg)":"none"}}>+</span>
+          </div>
+          {open===i && <div style={{padding:"0 20px 16px",fontSize:14,color:"rgba(240,237,232,.65)",lineHeight:1.75}}>{item.a}</div>}
         </div>
-        <div class="prog-body">
-          <p class="prog-desc">\${p.proyecto_final || p.habilidad_clave || ''}</p>
-          <div class="prog-footer">
-            <div class="prog-credits"><span class="prog-credits-num">\${p.creditos}</span><span class="prog-credits-label">créditos</span></div>
-            <span class="prog-badge">\${p.vertical.replace(/_/g,' ')}</span>
+      ))}
+    </div>
+  );
+}
+
+// ── PÁGINA PRINCIPAL ─────────────────────────────────────────────────────────
+export default function LandingPage() {
+  const [gandhiText, setGandhiText] = useState("");
+  const GANDHI = "El futuro depende de lo que hagamos en el presente.";
+
+  useEffect(() => {
+    let i = 0;
+    const t = setInterval(() => {
+      if (i < GANDHI.length) { setGandhiText(GANDHI.slice(0, ++i)); } else clearInterval(t);
+    }, 45);
+    return () => clearInterval(t);
+  }, []);
+
+  const S = {
+    page: { background:"#060A12", color:"#F0EDE8", fontFamily:"'DM Sans',system-ui,sans-serif", minHeight:"100vh" } as React.CSSProperties,
+    // Nav
+    nav: { position:"fixed" as const, top:0, left:0, right:0, zIndex:100, height:68, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 clamp(1.5rem,4vw,4rem)", background:"rgba(6,10,18,.92)", backdropFilter:"blur(20px)", borderBottom:"1px solid rgba(200,151,58,.1)" },
+    navLogo: { display:"flex", alignItems:"center", gap:12 },
+    navGem: { width:36, height:36, borderRadius:10, background:"linear-gradient(135deg,#C8973A,#1DB887)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"serif", fontSize:17, color:"#060A12" },
+    navLinks: { display:"flex", gap:"2.5rem", listStyle:"none" as const },
+    navCta: { background:"#C8973A", color:"#060A12", fontWeight:700, fontSize:13, padding:"9px 22px", borderRadius:8, textDecoration:"none" },
+    // Sections
+    section: (bg:string="transparent") => ({ padding:"clamp(4rem,8vw,7rem) clamp(1.5rem,4vw,4rem)", background:bg }),
+    inner: { maxWidth:1200, margin:"0 auto" } as React.CSSProperties,
+    label: { fontFamily:"monospace", fontSize:"0.65rem", letterSpacing:".15em", textTransform:"uppercase" as const, color:"#C8973A", display:"flex", alignItems:"center", gap:10, marginBottom:16 },
+    h2: { fontFamily:"'DM Serif Display',serif", fontSize:"clamp(2rem,3.5vw,2.9rem)", lineHeight:1.12, color:"#F0EDE8", marginBottom:12 } as React.CSSProperties,
+    lead: { fontSize:"1.05rem", color:"rgba(240,237,232,.6)", maxWidth:580, lineHeight:1.75, marginBottom:"2.5rem" } as React.CSSProperties,
+  };
+
+  return (
+    <div style={S.page}>
+      {/* NAV */}
+      <nav style={S.nav}>
+        <div style={S.navLogo}>
+          <div style={S.navGem}>IV</div>
+          <div>
+            <div style={{fontSize:14,fontWeight:600,color:"#F0EDE8",lineHeight:1.2}}>Instituto Virtual de IA</div>
+            <div style={{fontSize:10,color:"#C8973A",fontFamily:"monospace",letterSpacing:".1em",textTransform:"uppercase"}}>Mejoramiento Profesional</div>
           </div>
         </div>
-      </a>\`;
-    }).join('');
-    grid.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-  } catch(e) {
-    // Fallback estático si la BD no responde
-    const grid = document.getElementById('prog-grid');
-    const fallback = [
-      {icon:'🌾',nivel:'Grado Completo',titulo:'Ingeniería Agronómica y AgriTech',desc:'Granja inteligente llave en mano',cr:84,v:'agritech',color:'#1DB887',codigo:'ING-AGRO-001'},
-      {icon:'⚙️',nivel:'Grado Completo',titulo:'Ingeniería Electrónica y Mecatrónica',desc:'Dispositivo IoT médico o robótico funcional',cr:84,v:'iot_mecanica',color:'#82AAFF',codigo:'ING-ELEC-001'},
-      {icon:'💼',nivel:'Grado Completo',titulo:'Administración, Finanzas y FinTech',desc:'Firma de auditoría OPC con IA',cr:84,v:'administracion_finanzas',color:'#C8973A',codigo:'ADM-FIN-001'},
-      {icon:'🏠',nivel:'Básico',titulo:'IA para el Hogar: Negocios desde Cero',desc:'Tienda en línea con agente de ventas IA',cr:10,v:'micro_emprendimiento',color:'#F78C6C',codigo:'MICRO-001'},
-      {icon:'💻',nivel:'Avanzado',titulo:'Ingeniería de Software con IA',desc:'Plataforma SaaS completa con agentes IA',cr:25,v:'ingenieria_software_ia',color:'#C3E88D',codigo:'SOFT-001'},
-      {icon:'🩺',nivel:'Grado Completo',titulo:'Ciencias de la Salud y Telemedicina',desc:'Clínica de telesalud independiente operativa',cr:84,v:'salud_bienestar',color:'#82AAFF',codigo:'CIEN-SALUD-001'},
-    ];
-    grid.innerHTML = fallback.map(p => \`<a href="/programas/\${p.codigo}" class="prog-card reveal" style="--prog-color:\${p.color}22;--prog-accent:\${p.color}">
-      <div class="prog-header">
-        <span class="prog-icon">\${p.icon}</span>
-        <div class="prog-level">\${p.nivel}</div>
-        <div class="prog-title">\${p.titulo}</div>
-      </div>
-      <div class="prog-body">
-        <p class="prog-desc">\${p.desc}</p>
-        <div class="prog-footer">
-          <div class="prog-credits"><span class="prog-credits-num">\${p.cr}</span><span class="prog-credits-label">créditos</span></div>
-          <span class="prog-badge">\${p.v.replace(/_/g,' ')}</span>
+        <ul style={S.navLinks} className="nav-links-hide">
+          {["#facultades","#como-funciona","#simuladores","#certificacion","#registro"].map((h,i)=>(
+            <li key={h}><a href={h} style={{fontSize:13,fontWeight:500,color:"rgba(240,237,232,.6)",textDecoration:"none"}}>{["Facultades","Cómo funciona","Simuladores","Certificación","Registro"][i]}</a></li>
+          ))}
+        </ul>
+        <a href="#registro" style={S.navCta}>Inscribirme gratis</a>
+      </nav>
+
+      {/* ── HERO ──────────────────────────────────────────────────────────── */}
+      <section style={{minHeight:"100vh", display:"flex", flexDirection:"column", justifyContent:"center", padding:"calc(68px + 4rem) clamp(1.5rem,4vw,4rem) 4rem", position:"relative", overflow:"hidden", background:"linear-gradient(160deg,#0C1525 0%,#060A12 60%)"}}>
+        <NeuralCanvas />
+        {/* Glow orbs */}
+        <div style={{position:"absolute",top:"-15%",right:"-5%",width:600,height:600,borderRadius:"50%",background:"radial-gradient(circle,rgba(59,130,246,.06),transparent 65%)",pointerEvents:"none"}} />
+        <div style={{position:"absolute",bottom:"-10%",left:"-5%",width:400,height:400,borderRadius:"50%",background:"radial-gradient(circle,rgba(29,184,135,.05),transparent 65%)",pointerEvents:"none"}} />
+
+        <div style={{...S.inner, position:"relative", zIndex:2, display:"grid", gridTemplateColumns:"1fr 1fr", gap:"5rem", alignItems:"center"}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
+              <div style={{width:6,height:6,borderRadius:"50%",background:"#1DB887",animation:"pulse 2s infinite"}} />
+              <span style={{fontFamily:"monospace",fontSize:"0.68rem",letterSpacing:".14em",color:"#1DB887",textTransform:"uppercase"}}>Instituto Virtual de IA · 2026</span>
+            </div>
+            <h1 style={{fontFamily:"'DM Serif Display',serif",fontSize:"clamp(2.8rem,4.5vw,4.2rem)",lineHeight:1.06,letterSpacing:"-.015em",color:"#F0EDE8",marginBottom:20}}>
+              <em style={{color:"#C8973A",fontStyle:"italic"}}>Ciencia</em> con<br/>
+              <span style={{color:"#1DB887"}}>conciencia.</span><br/>
+              Conocimiento<br/>con sabiduría.
+            </h1>
+            <p style={{fontSize:"1.1rem",color:"rgba(240,237,232,.6)",maxWidth:480,lineHeight:1.8,marginBottom:24}}>
+              Mejoramiento profesional de clase mundial con IA para emprendedores, agricultores, técnicos y familias de América Latina.
+            </p>
+            <div style={{background:"linear-gradient(135deg,rgba(200,151,58,.07),rgba(200,151,58,.02))",border:"1px solid rgba(200,151,58,.15)",borderRadius:12,padding:"16px 20px",marginBottom:28,maxWidth:480}}>
+              <p style={{fontFamily:"'DM Serif Display',serif",fontStyle:"italic",fontSize:"0.97rem",color:"rgba(240,237,232,.8)",lineHeight:1.65,margin:0}}>
+                "{gandhiText}<span style={{color:"#C8973A",animation:"blink .7s infinite"}}>|</span>"
+              </p>
+              <cite style={{fontFamily:"monospace",fontSize:"0.62rem",color:"#C8973A",letterSpacing:".1em",textTransform:"uppercase",display:"block",marginTop:6}}>Mahatma Gandhi</cite>
+            </div>
+            <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:32}}>
+              <a href="#registro" style={{background:"#C8973A",color:"#060A12",fontWeight:700,fontSize:"0.9rem",padding:"13px 28px",borderRadius:12,textDecoration:"none",display:"inline-flex",alignItems:"center",gap:6}}>
+                Iniciar diagnóstico gratuito →
+              </a>
+              <a href="#facultades" style={{border:"1.5px solid rgba(240,237,232,.15)",color:"rgba(240,237,232,.65)",fontWeight:500,fontSize:"0.9rem",padding:"13px 28px",borderRadius:12,textDecoration:"none"}}>
+                Ver programas
+              </a>
+            </div>
+            {/* Stats */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:1,background:"rgba(240,237,232,.05)",borderRadius:12,overflow:"hidden",border:"1px solid rgba(240,237,232,.05)"}}>
+              {STATS.map(s=>(
+                <div key={s.label} style={{background:"#060A12",padding:"14px 8px",textAlign:"center"}}>
+                  <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"1.7rem",color:"#C8973A",lineHeight:1}}>{s.num}</div>
+                  <div style={{fontFamily:"monospace",fontSize:"0.58rem",color:"rgba(240,237,232,.3)",letterSpacing:".06em",textTransform:"uppercase",marginTop:4}}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Columna derecha — preview del navegador jerárquico */}
+          <div style={{display:"flex",flexDirection:"column",gap:12}} className="hero-right-hide">
+            <div style={{background:"rgba(240,237,232,.03)",border:"1px solid rgba(200,151,58,.12)",borderRadius:16,padding:"16px 18px",marginBottom:4}}>
+              <div style={{fontFamily:"monospace",fontSize:"0.62rem",color:"#C8973A",letterSpacing:".1em",textTransform:"uppercase",marginBottom:10}}>Navega el pensum en tiempo real</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {FACULTADES.slice(0,4).map(f=>(
+                  <div key={f.codigo} style={{background:f.bg,border:`1px solid ${f.color}25`,borderRadius:8,padding:"10px 12px",display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:16}}>{f.emoji}</span>
+                    <div>
+                      <div style={{fontSize:11,fontWeight:600,color:"#F0EDE8"}}>{f.nombre.split(" ").slice(0,2).join(" ")}</div>
+                      <div style={{fontSize:10,color:f.color,fontFamily:"monospace"}}>{f.num} prog.</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <a href="#facultades" style={{display:"block",marginTop:10,textAlign:"center",fontSize:11,color:"#C8973A",fontFamily:"monospace",textDecoration:"none"}}>Ver las 9 facultades completas ↓</a>
+            </div>
+            {[
+              {icon:"🏅",titulo:"Certificado blockchain",desc:"Verificable en Polygon L2. Estándar MIT Blockcerts v3.",badge:"Inmutable · Global"},
+              {icon:"🤖",titulo:"17 agentes IA docentes",desc:"Cada uno con personalidad, metodología y memoria de tu historia.",badge:"24/7 · WhatsApp + Telegram"},
+              {icon:"🔬",titulo:"Simuladores open source",desc:"FreeCAD, DSSAT, EPANET, DWSIM — el mismo software de ingenieros reales.",badge:"100% open source"},
+            ].map((c,i)=>(
+              <div key={i} style={{background:"rgba(12,21,37,.9)",border:"1px solid rgba(240,237,232,.07)",borderRadius:14,padding:"16px 18px",display:"flex",alignItems:"flex-start",gap:14,transition:"all .2s"}}
+                onMouseEnter={e=>(e.currentTarget.style.borderColor="rgba(200,151,58,.25)")}
+                onMouseLeave={e=>(e.currentTarget.style.borderColor="rgba(240,237,232,.07)")}>
+                <span style={{fontSize:22,flexShrink:0}}>{c.icon}</span>
+                <div>
+                  <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"1rem",color:"#F0EDE8",marginBottom:4}}>{c.titulo}</div>
+                  <div style={{fontSize:"0.82rem",color:"rgba(240,237,232,.55)",lineHeight:1.6,marginBottom:6}}>{c.desc}</div>
+                  <span style={{fontFamily:"monospace",fontSize:"0.62rem",background:"rgba(29,184,135,.08)",color:"#1DB887",padding:"2px 8px",borderRadius:4,border:"1px solid rgba(29,184,135,.15)"}}>{c.badge}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── DISCLAIMER BANNER ──────────────────────────────────────────────── */}
+      <div style={{background:"rgba(200,151,58,.08)",borderTop:"1px solid rgba(200,151,58,.2)",borderBottom:"1px solid rgba(200,151,58,.2)",padding:"14px clamp(1.5rem,4vw,4rem)"}}>
+        <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontFamily:"monospace",fontSize:11,color:"#C8973A",background:"rgba(200,151,58,.15)",padding:"3px 10px",borderRadius:4,flexShrink:0}}>IMPORTANTE</span>
+          <p style={{fontSize:13,color:"rgba(240,237,232,.65)",margin:0,lineHeight:1.6}}>
+            Emitimos <strong style={{color:"rgba(240,237,232,.85)"}}>Certificados de Mejoramiento Profesional</strong> verificables en blockchain — no títulos universitarios. Actualizamos, reforzamos y mejoramos el acceso a conocimientos y fortalezas adaptadas al mercado global actual.
+          </p>
         </div>
       </div>
-    </a>\`).join('');
-    grid.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-  }
-})();
 
-// Chat widget
-function toggleChat() {
-  const panel = document.getElementById('chat-panel');
-  panel.classList.toggle('open');
-}
+      {/* ── VISIÓN / MISIÓN / PROPÓSITO / PRINCIPIOS ──────────────────────── */}
+      <section style={S.section("#0C1525")} id="vision">
+        <div style={S.inner}>
+          <div style={S.label}><span style={{width:20,height:1,background:"#C8973A",display:"block"}} />Identidad institucional</div>
+          <h2 style={{...S.h2, maxWidth:600}}>Construidos sobre valores que <em style={{color:"#C8973A",fontStyle:"italic"}}>no negociamos</em></h2>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:16,marginTop:8}}>
+            {PILARES.map((p,i)=>(
+              <div key={i} style={{background:"rgba(240,237,232,.02)",border:"1px solid rgba(240,237,232,.06)",borderRadius:16,padding:"28px 24px",position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",top:-20,right:-20,fontSize:80,opacity:.04,userSelect:"none"}}>{p.icon}</div>
+                <div style={{fontSize:28,marginBottom:12}}>{p.icon}</div>
+                <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"1.2rem",color:"#F0EDE8",marginBottom:10}}>{p.titulo}</div>
+                <p style={{fontSize:14,color:"rgba(240,237,232,.6)",lineHeight:1.75,margin:0}}>{p.texto}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-let chatLoading = false;
-async function sendChat() {
-  if (chatLoading) return;
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-  appendMsg('user', text);
-  chatLoading = true;
-  document.getElementById('chat-send').disabled = true;
-  const typingId = appendTyping();
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mensaje: text, agente_codigo: 'ONBOARD-001', canal_id: 'web-widget' })
-    });
-    const data = await res.json();
-    removeTyping(typingId);
-    if (data.ok) {
-      appendMsg('assistant', data.respuesta, data.agente?.nombre || 'Alejandra');
-    } else {
-      document.getElementById('chat-fallback').style.display = 'block';
-      appendMsg('assistant', data.mensaje || 'Escribe a @iainstituto_bot en Telegram.', 'Sistema');
-    }
-  } catch {
-    removeTyping(typingId);
-    document.getElementById('chat-fallback').style.display = 'block';
-    appendMsg('assistant', 'Escribe a @iainstituto_bot en Telegram para continuar.', 'Sistema');
-  }
-  chatLoading = false;
-  document.getElementById('chat-send').disabled = false;
-}
+      {/* ── NIVELES ACADÉMICOS ─────────────────────────────────────────────── */}
+      <section style={S.section()} id="niveles">
+        <div style={S.inner}>
+          <div style={S.label}><span style={{width:20,height:1,background:"#C8973A",display:"block"}} />Niveles académicos</div>
+          <h2 style={S.h2}>Desde <em style={{color:"#C8973A",fontStyle:"italic"}}>técnico</em> hasta maestría</h2>
+          <p style={S.lead}>Sin importar tu punto de partida — encontramos tu nivel y construimos desde ahí.</p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+            {NIVELES.map((n,i)=>(
+              <div key={n.id} style={{background:"rgba(240,237,232,.02)",border:"1px solid rgba(240,237,232,.06)",borderRadius:12,padding:"20px 18px",transition:"border-color .2s"}}
+                onMouseEnter={e=>(e.currentTarget.style.borderColor="rgba(200,151,58,.3)")}
+                onMouseLeave={e=>(e.currentTarget.style.borderColor="rgba(240,237,232,.06)")}>
+                <div style={{fontFamily:"monospace",fontSize:11,color:"#C8973A",letterSpacing:".08em",marginBottom:6}}>{n.cr}</div>
+                <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"1.1rem",color:"#F0EDE8",marginBottom:4}}>{n.label}</div>
+                <div style={{fontSize:13,color:"rgba(240,237,232,.5)"}}>{n.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:16,padding:"14px 20px",background:"rgba(29,184,135,.05)",border:"1px solid rgba(29,184,135,.12)",borderRadius:10,fontSize:13,color:"rgba(240,237,232,.6)"}}>
+            ✓ Todos los programas incluyen el <strong style={{color:"rgba(240,237,232,.8)"}}>Núcleo Transversal DSI-OPC</strong> de 20 créditos: Finanzas · Mercadeo · Logística · RRHH · Legal · Ambiental · IA · Corporación Unipersonal
+          </div>
+        </div>
+      </section>
 
-function appendMsg(role, text, agentName) {
-  const msgs = document.getElementById('chat-msgs');
-  const div = document.createElement('div');
-  div.className = \`chat-msg \${role}\`;
-  if (role === 'assistant') {
-    div.innerHTML = \`<div class="chat-msg-avatar">A</div><div>\${agentName ? \`<div class="chat-agent-name">\${agentName}</div>\` : ''}<div class="chat-msg-bubble">\${text}</div></div>\`;
-  } else {
-    div.innerHTML = \`<div class="chat-msg-bubble">\${text}</div>\`;
-  }
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
+      {/* ── NAVEGADOR JERÁRQUICO ───────────────────────────────────────────── */}
+      <section style={S.section("#0C1525")} id="facultades">
+        <div style={S.inner}>
+          <div style={S.label}><span style={{width:20,height:1,background:"#C8973A",display:"block"}} />Explora el pensum</div>
+          <h2 style={S.h2}>Navega de área a <em style={{color:"#C8973A",fontStyle:"italic"}}>materia</em> — en tiempo real</h2>
+          <p style={S.lead}>Haz clic en una facultad → elige un programa → abre las fases → ve cada materia con sus créditos, horas y simuladores.</p>
+          <NavegadorJerarquico />
+        </div>
+      </section>
 
-function appendTyping() {
-  const msgs = document.getElementById('chat-msgs');
-  const id = 'typing-' + Date.now();
-  msgs.insertAdjacentHTML('beforeend', \`<div class="chat-msg" id="\${id}"><div class="chat-msg-avatar">A</div><div class="chat-typing"><span></span><span></span><span></span></div></div>\`);
-  msgs.scrollTop = msgs.scrollHeight;
-  return id;
-}
+      {/* ── CÓMO FUNCIONA ─────────────────────────────────────────────────── */}
+      <section style={S.section()} id="como-funciona">
+        <div style={S.inner}>
+          <div style={S.label}><span style={{width:20,height:1,background:"#C8973A",display:"block"}} />Proceso</div>
+          <h2 style={S.h2}>Del diagnóstico a la <em style={{color:"#C8973A",fontStyle:"italic"}}>certificación</em></h2>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"2px",background:"rgba(240,237,232,.04)",borderRadius:16,overflow:"hidden",border:"1px solid rgba(240,237,232,.06)"}}>
+            {[
+              {n:"01",icon:"🌟",title:"Diagnóstico gratuito",desc:"Alejandra evalúa tu perfil y diseña tu ruta personalizada en minutos."},
+              {n:"02",icon:"📱",title:"Aprende sin horarios",desc:"WhatsApp, Telegram o web. Evaluaciones por escenarios reales, nunca opción múltiple."},
+              {n:"03",icon:"🔬",title:"Simulas con herramientas reales",desc:"FreeCAD, DSSAT, EPANET, Claude API — el mismo software que usan los mejores."},
+              {n:"04",icon:"🏅",title:"Certificado blockchain",desc:"Credencial en Polygon L2. Verificable globalmente por cualquier empleador."},
+            ].map((s,i)=>(
+              <div key={i} style={{background:"#060A12",padding:"32px 24px",position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",top:-10,right:10,fontFamily:"serif",fontSize:"4rem",color:"rgba(200,151,58,.06)",lineHeight:1}}>{s.n}</div>
+                <div style={{fontSize:24,marginBottom:12}}>{s.icon}</div>
+                <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"1rem",color:"#F0EDE8",marginBottom:8}}>{s.title}</div>
+                <p style={{fontSize:13,color:"rgba(240,237,232,.55)",lineHeight:1.7,margin:0}}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-function removeTyping(id) {
-  document.getElementById(id)?.remove();
-}
+      {/* ── SIMULADORES ───────────────────────────────────────────────────── */}
+      <section style={S.section("#0C1525")} id="simuladores">
+        <div style={S.inner}>
+          <div style={S.label}><span style={{width:20,height:1,background:"#C8973A",display:"block"}} />Simuladores open source</div>
+          <h2 style={S.h2}>Aprendes con las herramientas que <em style={{color:"#C8973A",fontStyle:"italic"}}>usa la industria</em></h2>
+          <p style={S.lead}>No aprendes sobre simuladores — aprendes con ellos. 100% open source, gratuitos, y los mismos que usan SpaceX, FAO, NASA y los mejores centros de investigación del mundo.</p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+            {SIMULADORES.map((s,i)=>(
+              <div key={i} style={{background:"rgba(240,237,232,.02)",border:`1px solid ${s.color}20`,borderRadius:14,padding:"22px 20px",transition:"all .2s",position:"relative",overflow:"hidden"}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor=`${s.color}40`;e.currentTarget.style.transform="translateY(-3px)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=`${s.color}20`;e.currentTarget.style.transform="none";}}>
+                <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${s.color},transparent)`}} />
+                <div style={{fontFamily:"monospace",fontSize:11,color:s.color,letterSpacing:".08em",textTransform:"uppercase",marginBottom:8}}>{s.area}</div>
+                <div style={{fontSize:15,fontWeight:600,color:"#F0EDE8",marginBottom:6}}>{s.tool}</div>
+                <p style={{fontSize:13,color:"rgba(240,237,232,.55)",lineHeight:1.7,margin:0}}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-// Form submit
-async function submitForm() {
-  const nombre = document.getElementById('f-nombre').value.trim();
-  const wa = document.getElementById('f-wa').value.trim();
-  if (!nombre || !wa) { alert('Por favor ingresa tu nombre y WhatsApp.'); return; }
-  const btn = document.getElementById('form-btn');
-  btn.textContent = 'Registrando...';
-  btn.disabled = true;
-  try {
-    await fetch('/api/registro', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nombre, apellido: document.getElementById('f-apellido').value,
-        email: document.getElementById('f-email').value,
-        whatsapp: wa, pais: document.getElementById('f-pais').value,
-        perfil: document.getElementById('f-perfil').value,
-        area: document.getElementById('f-area').value
-      })
-    });
-  } catch {}
-  btn.textContent = '¡Listo! Abre @iainstituto_bot en Telegram →';
-  btn.style.background = '#1DB887';
-  btn.onclick = () => window.open('https://t.me/iainstituto_bot', '_blank');
-}
-</script>
-`}} />
-    </>
-  )
+      {/* ── CERTIFICACIÓN ─────────────────────────────────────────────────── */}
+      <section style={S.section()} id="certificacion">
+        <div style={{...S.inner, display:"grid", gridTemplateColumns:"1fr 1fr", gap:"5rem", alignItems:"start"}}>
+          <div>
+            <div style={S.label}><span style={{width:20,height:1,background:"#C8973A",display:"block"}} />Certificación blockchain</div>
+            <h2 style={S.h2}>Tu logro, <em style={{color:"#C8973A",fontStyle:"italic"}}>inmutable</em> para siempre</h2>
+            <p style={S.lead}>Cada certificado es un activo digital verificable por cualquier empresa, en cualquier país, sin intermediarios.</p>
+            <div style={{display:"flex",flexDirection:"column",gap:0}}>
+              {[
+                {n:"01",t:"Hash SHA-256 al aprobar",d:"Hash criptográfico único de tu evaluación capstone. Nadie puede alterarlo."},
+                {n:"02",t:"Registro en Polygon L2",d:"Smart contract en Polygon. Costo mínimo, verificación pública permanente."},
+                {n:"03",t:"Estándar MIT Blockcerts v3",d:"Compatible con LinkedIn, Indeed y sistemas de RRHH a nivel global."},
+                {n:"04",t:"Verificación sin intermediarios",d:"URL pública: ivai.lat/verificar/[UUID]. Cualquier empresa escanea el QR."},
+              ].map((s,i)=>(
+                <div key={i} style={{display:"flex",gap:20,padding:"20px 0",borderBottom:"1px solid rgba(240,237,232,.05)"}}>
+                  <span style={{fontFamily:"'DM Serif Display',serif",fontSize:"1.8rem",color:"rgba(200,151,58,.2)",lineHeight:1,minWidth:40}}>{s.n}</span>
+                  <div><div style={{fontFamily:"'DM Serif Display',serif",fontSize:"1rem",color:"#F0EDE8",marginBottom:4}}>{s.t}</div><p style={{fontSize:13,color:"rgba(240,237,232,.55)",lineHeight:1.65,margin:0}}>{s.d}</p></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Código JSON del certificado */}
+          <div style={{background:"#0C1525",border:"1px solid rgba(240,237,232,.06)",borderRadius:16,padding:"24px",fontFamily:"monospace",fontSize:13,lineHeight:2,position:"sticky",top:100}}>
+            <div style={{color:"rgba(240,237,232,.25)"}}>// Certificado verificable · Polygon L2</div>
+            <div><span style={{color:"#C792EA"}}>const</span> <span style={{color:"#82AAFF"}}>certificado</span> = {"{"}</div>
+            <div>&nbsp;&nbsp;<span style={{color:"#82AAFF"}}>tipo</span>: <span style={{color:"#C3E88D"}}>"CertificadoMejoramiento"</span>,</div>
+            <div>&nbsp;&nbsp;<span style={{color:"#82AAFF"}}>programa</span>: <span style={{color:"#C3E88D"}}>"[Tu programa]"</span>,</div>
+            <div>&nbsp;&nbsp;<span style={{color:"#82AAFF"}}>creditos</span>: <span style={{color:"#F78C6C"}}>84</span>,</div>
+            <div>&nbsp;&nbsp;<span style={{color:"#82AAFF"}}>blockchain</span>: {"{"}</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:"#82AAFF"}}>red</span>: <span style={{color:"#C3E88D"}}>"Polygon L2"</span>,</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:"#82AAFF"}}>estandar</span>: <span style={{color:"#C3E88D"}}>"MIT Blockcerts v3"</span>,</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:"#82AAFF"}}>verificable</span>: <span style={{color:"#1DB887"}}>true</span></div>
+            <div>&nbsp;&nbsp;{"}"},</div>
+            <div>&nbsp;&nbsp;<span style={{color:"#82AAFF"}}>nota</span>: <span style={{color:"#C3E88D"}}>"Mejoramiento Profesional.</span></div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:"#C3E88D"}}>No confiere título académico."</span></div>
+            <div>{"}"}</div>
+            <div style={{marginTop:16,padding:"12px",background:"rgba(29,184,135,.06)",borderRadius:8,border:"1px solid rgba(29,184,135,.12)",color:"rgba(240,237,232,.65)",fontSize:12,lineHeight:1.7}}>
+              ✓ No almacenamos datos personales en la cadena — solo el hash del certificado. Tu privacidad queda protegida.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PREGUNTAS FRECUENTES ───────────────────────────────────────────── */}
+      <section style={S.section("#0C1525")}>
+        <div style={{...S.inner, display:"grid", gridTemplateColumns:"1fr 1fr", gap:"5rem", alignItems:"start"}}>
+          <div>
+            <div style={S.label}><span style={{width:20,height:1,background:"#C8973A",display:"block"}} />Preguntas frecuentes</div>
+            <h2 style={S.h2}>Lo que te preguntas <em style={{color:"#C8973A",fontStyle:"italic"}}>antes de entrar</em></h2>
+            <p style={{...S.lead,marginBottom:0}}>Respuestas directas. Sin lenguaje de marketing.</p>
+          </div>
+          <div style={{paddingTop:8}}><FAQ /></div>
+        </div>
+      </section>
+
+      {/* ── REGISTRO CTA ──────────────────────────────────────────────────── */}
+      <section style={{...S.section("linear-gradient(160deg,#0C1A2E,#061018)"), borderTop:"1px solid rgba(240,237,232,.06)"}} id="registro">
+        <div style={{...S.inner, display:"grid", gridTemplateColumns:"1fr 1fr", gap:"5rem", alignItems:"start"}}>
+          <div>
+            <div style={S.label}><span style={{width:20,height:1,background:"#C8973A",display:"block"}} />Inscripción gratuita</div>
+            <h2 style={S.h2}>Comienza hoy.<br/>Tu mentor <em style={{color:"#C8973A",fontStyle:"italic"}}>te espera.</em></h2>
+            <p style={{...S.lead,marginBottom:24}}>Diagnóstico gratuito. Sin tarjeta. Alejandra te contacta en minutos.</p>
+            {[
+              {icon:"🎯",t:"Diagnóstico personalizado gratuito",d:"Alejandra evalúa tu nivel y recomienda tu programa ideal."},
+              {icon:"📱",t:"WhatsApp, Telegram o web",d:"Sin app extra. Sin horarios. Desde donde estés, cuando quieras."},
+              {icon:"🏅",t:"Certificado blockchain al completar",d:"Verificable globalmente. Inmutable. Estándar MIT Blockcerts."},
+              {icon:"♾",t:"Mentor que no te olvida",d:"Tu agente permanece contigo al terminar. De por vida."},
+            ].map((p,i)=>(
+              <div key={i} style={{display:"flex",gap:14,padding:"14px 0",borderBottom:"1px solid rgba(240,237,232,.04)"}}>
+                <div style={{width:38,height:38,borderRadius:10,background:"rgba(200,151,58,.08)",border:"1px solid rgba(200,151,58,.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{p.icon}</div>
+                <div><div style={{fontWeight:600,fontSize:14,color:"#F0EDE8",marginBottom:2}}>{p.t}</div><div style={{fontSize:12,color:"rgba(240,237,232,.55)"}}>{p.d}</div></div>
+              </div>
+            ))}
+          </div>
+          {/* FORMULARIO */}
+          <div style={{background:"rgba(240,237,232,.02)",border:"1px solid rgba(240,237,232,.07)",borderRadius:24,padding:"2.5rem"}}>
+            <h3 style={{fontFamily:"'DM Serif Display',serif",fontSize:"1.35rem",color:"#F0EDE8",marginBottom:24}}>Iniciar diagnóstico gratuito</h3>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+              <div><label style={{display:"block",fontSize:12,fontWeight:500,color:"rgba(240,237,232,.55)",marginBottom:6}}>Nombre *</label>
+                <input id="f-nombre" type="text" placeholder="Tu nombre" style={{width:"100%",background:"rgba(240,237,232,.05)",border:"1px solid rgba(240,237,232,.1)",borderRadius:10,padding:"10px 14px",color:"#F0EDE8",fontSize:14}} /></div>
+              <div><label style={{display:"block",fontSize:12,fontWeight:500,color:"rgba(240,237,232,.55)",marginBottom:6}}>Apellido</label>
+                <input id="f-apellido" type="text" placeholder="Apellido" style={{width:"100%",background:"rgba(240,237,232,.05)",border:"1px solid rgba(240,237,232,.1)",borderRadius:10,padding:"10px 14px",color:"#F0EDE8",fontSize:14}} /></div>
+            </div>
+            {[["Email","email","f-email","tu@email.com"],["WhatsApp *","tel","f-wa","+503 7000-0000"]].map(([lbl,type,id,ph])=>(
+              <div key={id} style={{marginBottom:14}}>
+                <label style={{display:"block",fontSize:12,fontWeight:500,color:"rgba(240,237,232,.55)",marginBottom:6}}>{lbl}</label>
+                <input id={id} type={type} placeholder={ph} style={{width:"100%",background:"rgba(240,237,232,.05)",border:"1px solid rgba(240,237,232,.1)",borderRadius:10,padding:"10px 14px",color:"#F0EDE8",fontSize:14}} />
+              </div>
+            ))}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+              {[["País","f-pais",["El Salvador","Costa Rica","Venezuela","Guatemala","México","Colombia","EE.UU.","Otro"]],["Área de interés","f-area",["Ingeniería y Tecnología","AgriTech","Salud","Administración","Derecho","Humanidades","MBA / Posgrado","Orientación personal"]]].map(([lbl,id,opts])=>(
+                <div key={id as string}>
+                  <label style={{display:"block",fontSize:12,fontWeight:500,color:"rgba(240,237,232,.55)",marginBottom:6}}>{lbl as string}</label>
+                  <select id={id as string} style={{width:"100%",background:"#0C1525",border:"1px solid rgba(240,237,232,.1)",borderRadius:10,padding:"10px 14px",color:"#F0EDE8",fontSize:14}}>
+                    {(opts as string[]).map(o=><option key={o}>{o}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <button id="form-btn" style={{width:"100%",padding:"14px",background:"#C8973A",border:"none",borderRadius:12,cursor:"pointer",fontWeight:700,fontSize:15,color:"#060A12",marginTop:4}}
+              onClick={async()=>{
+                const n=(document.getElementById("f-nombre") as HTMLInputElement)?.value?.trim();
+                const w=(document.getElementById("f-wa") as HTMLInputElement)?.value?.trim();
+                if(!n||!w){alert("Por favor ingresa tu nombre y WhatsApp.");return;}
+                const btn=document.getElementById("form-btn") as HTMLButtonElement;
+                btn.textContent="Registrando..."; btn.disabled=true;
+                try { await fetch("/api/registro",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nombre:n,apellido:(document.getElementById("f-apellido") as HTMLInputElement)?.value,email:(document.getElementById("f-email") as HTMLInputElement)?.value,whatsapp:w,pais:(document.getElementById("f-pais") as HTMLSelectElement)?.value,area:(document.getElementById("f-area") as HTMLSelectElement)?.value})}); } catch {}
+                btn.textContent="¡Listo! Abre @iainstituto_bot en Telegram →";
+                btn.style.background="#1DB887";
+                btn.onclick=()=>window.open("https://t.me/iainstituto_bot","_blank");
+              }}>
+              Iniciar mi camino →
+            </button>
+            <p style={{fontFamily:"monospace",fontSize:"0.65rem",color:"rgba(240,237,232,.25)",textAlign:"center",marginTop:12,letterSpacing:".04em"}}>DATOS PROTEGIDOS · GDPR COMPLIANT · SIN SPAM</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ────────────────────────────────────────────────────────── */}
+      <footer style={{background:"#030608",borderTop:"1px solid rgba(200,151,58,.07)",padding:"3.5rem clamp(1.5rem,4vw,4rem) 2rem"}}>
+        <div style={{...S.inner}}>
+          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:"4rem",marginBottom:"3rem"}}>
+            <div>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                <div style={{...S.navGem,width:36,height:36}}>IV</div>
+                <span style={{fontFamily:"'DM Serif Display',serif",fontSize:"1rem",color:"#F0EDE8"}}>Instituto Virtual de IA</span>
+              </div>
+              <p style={{fontSize:13,color:"rgba(240,237,232,.3)",lineHeight:1.75,maxWidth:280}}>Mejoramiento profesional con los más altos estándares internacionales, bajo los principios de la Doctrina Social de la Iglesia y el pensamiento gandhiano.</p>
+              <p style={{fontFamily:"'DM Serif Display',serif",fontStyle:"italic",color:"rgba(200,151,58,.45)",fontSize:13,marginTop:12}}>"Be the change you wish to see in the world." — Gandhi</p>
+            </div>
+            <div>
+              <div style={{fontFamily:"monospace",fontSize:"0.62rem",letterSpacing:".12em",textTransform:"uppercase",color:"#C8973A",marginBottom:14}}>Programas</div>
+              {["Ingeniería","AgriTech","Salud","Administración","Humanidades","MBA Tecnológico"].map(l=>(
+                <a key={l} href="/programas" style={{display:"block",fontSize:13,color:"rgba(240,237,232,.3)",marginBottom:8,textDecoration:"none"}}>{l}</a>
+              ))}
+            </div>
+            <div>
+              <div style={{fontFamily:"monospace",fontSize:"0.62rem",letterSpacing:".12em",textTransform:"uppercase",color:"#C8973A",marginBottom:14}}>Contacto</div>
+              <a href="https://t.me/iainstituto_bot" target="_blank" style={{display:"block",fontSize:13,color:"#1DB887",marginBottom:8,textDecoration:"none"}}>@iainstituto_bot</a>
+              <a href="#registro" style={{display:"block",fontSize:13,color:"rgba(240,237,232,.3)",marginBottom:8,textDecoration:"none"}}>Formulario de registro</a>
+              <div style={{marginTop:16,padding:"12px",background:"rgba(29,184,135,.05)",border:"1px solid rgba(29,184,135,.1)",borderRadius:8}}>
+                <p style={{fontSize:11,color:"rgba(240,237,232,.3)",lineHeight:1.6,margin:0}}>Certificados de Mejoramiento Profesional. No conferimos títulos universitarios.</p>
+              </div>
+            </div>
+          </div>
+          <div style={{borderTop:"1px solid rgba(240,237,232,.05)",paddingTop:"1.5rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:12,color:"rgba(240,237,232,.25)"}}>© 2026 Instituto Virtual de IA. Todos los derechos reservados.</span>
+            <span style={{fontFamily:"monospace",fontSize:11,color:"#1DB887",letterSpacing:".05em"}}>@iainstituto_bot · Telegram</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* CSS global inline */}
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.5)}}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        input::placeholder{color:rgba(240,237,232,.2)}
+        input:focus,select:focus{outline:none;border-color:rgba(200,151,58,.4)!important}
+        select option{background:#0C1525}
+        @media(max-width:1024px){
+          .hero-right-hide{display:none!important}
+          .nav-links-hide{display:none!important}
+        }
+        @media(max-width:768px){
+          [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+          [style*="grid-template-columns:repeat(3,1fr)"]{grid-template-columns:1fr 1fr!important}
+          [style*="grid-template-columns:repeat(4,1fr)"]{grid-template-columns:1fr 1fr!important}
+          [style*="grid-template-columns:2fr 1fr 1fr"]{grid-template-columns:1fr!important}
+          [style*="grid-template-columns:repeat(6,1fr)"]{grid-template-columns:repeat(3,1fr)!important}
+        }
+      `}</style>
+    </div>
+  );
 }
